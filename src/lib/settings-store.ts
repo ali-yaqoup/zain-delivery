@@ -1,65 +1,67 @@
-import { promises as fs } from "fs";
-import path from "path";
+import "server-only";
 import {
   defaultSiteSettings,
   normalizeSettings,
   type SiteSettings,
 } from "./site-settings";
+import { getSql, hasDatabase } from "./db";
+import {
+  readSettingsFile,
+  replaceSettingsFile,
+} from "./settings-store-file";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
-
-let queue: Promise<unknown> = Promise.resolve();
-
-function enqueue<T>(task: () => Promise<T>): Promise<T> {
-  const run = queue.then(task, task);
-  queue = run.then(
-    () => undefined,
-    () => undefined
-  );
-  return run;
-}
-
-async function ensureFile() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  try {
-    await fs.access(SETTINGS_FILE);
-  } catch {
-    await fs.writeFile(
-      SETTINGS_FILE,
-      JSON.stringify(defaultSiteSettings(), null, 2),
-      "utf8"
-    );
-  }
-}
-
-async function readUnsafe(): Promise<SiteSettings> {
-  await ensureFile();
-  const raw = await fs.readFile(SETTINGS_FILE, "utf8");
-  try {
-    return normalizeSettings(JSON.parse(raw) as Partial<SiteSettings>);
-  } catch {
-    return defaultSiteSettings();
-  }
-}
-
-async function writeAtomic(settings: SiteSettings) {
-  await ensureFile();
-  const tmp = `${SETTINGS_FILE}.${process.pid}.${Date.now()}.tmp`;
-  await fs.writeFile(tmp, JSON.stringify(settings, null, 2), "utf8");
-  await fs.rename(tmp, SETTINGS_FILE);
-}
+type SettingsRow = {
+  id: string;
+  data: Partial<SiteSettings> | string;
+};
 
 export async function readSettings(): Promise<SiteSettings> {
-  return enqueue(() => readUnsafe());
+  if (!hasDatabase()) return readSettingsFile();
+
+  const sql = getSql();
+  const rows = await sql<SettingsRow[]>`
+    SELECT id, data
+    FROM site_settings
+    WHERE id = 'default'
+    LIMIT 1
+  `;
+
+  if (!rows[0]) {
+    const defaults = defaultSiteSettings();
+    await sql`
+      INSERT INTO site_settings (id, data, updated_at)
+      VALUES ('default', ${sql.json(defaults)}, NOW())
+      ON CONFLICT (id) DO NOTHING
+    `;
+    return defaults;
+  }
+
+  const raw =
+    typeof rows[0].data === "string"
+      ? (JSON.parse(rows[0].data) as Partial<SiteSettings>)
+      : rows[0].data;
+
+  // Empty seed row → use code defaults until admin saves
+  if (!raw || Object.keys(raw).length === 0) {
+    return defaultSiteSettings();
+  }
+
+  return normalizeSettings(raw);
 }
 
 export async function replaceSettings(
   settings: SiteSettings
 ): Promise<SiteSettings> {
-  return enqueue(async () => {
-    const next = normalizeSettings(settings);
-    await writeAtomic(next);
-    return next;
-  });
+  const next = normalizeSettings(settings);
+  if (!hasDatabase()) return replaceSettingsFile(next);
+
+  const sql = getSql();
+  await sql`
+    INSERT INTO site_settings (id, data, updated_at)
+    VALUES ('default', ${sql.json(next)}, NOW())
+    ON CONFLICT (id) DO UPDATE
+    SET data = EXCLUDED.data,
+        updated_at = NOW()
+  `;
+  return next;
 }

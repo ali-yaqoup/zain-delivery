@@ -1,52 +1,30 @@
-import { promises as fs } from "fs";
-import path from "path";
-import type { Order, OrderStatus } from "./types";
+import "server-only";
+import type { CartLine, Order, OrderStatus } from "./types";
+import { getSql, hasDatabase } from "./db";
+import {
+  createOrderFile,
+  getOrderByIdFile,
+  readOrdersFile,
+  updateOrderStatusFile,
+} from "./orders-store-file";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
-
-/** Serialize all order mutations so concurrent requests don't corrupt data */
-let queue: Promise<unknown> = Promise.resolve();
-
-function enqueue<T>(task: () => Promise<T>): Promise<T> {
-  const run = queue.then(task, task);
-  queue = run.then(
-    () => undefined,
-    () => undefined
-  );
-  return run;
-}
-
-async function ensureFile() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  try {
-    await fs.access(ORDERS_FILE);
-  } catch {
-    await fs.writeFile(ORDERS_FILE, "[]", "utf8");
-  }
-}
-
-async function readOrdersUnsafe(): Promise<Order[]> {
-  await ensureFile();
-  const raw = await fs.readFile(ORDERS_FILE, "utf8");
-  try {
-    return JSON.parse(raw) as Order[];
-  } catch {
-    return [];
-  }
-}
-
-async function writeOrdersAtomic(orders: Order[]) {
-  await ensureFile();
-  const tmp = `${ORDERS_FILE}.${process.pid}.${Date.now()}.tmp`;
-  const payload = JSON.stringify(orders);
-  await fs.writeFile(tmp, payload, "utf8");
-  await fs.rename(tmp, ORDERS_FILE);
-}
-
-export async function readOrders(): Promise<Order[]> {
-  return enqueue(() => readOrdersUnsafe());
-}
+type OrderRow = {
+  id: string;
+  created_at: Date | string;
+  status: OrderStatus;
+  store_id: string;
+  store_name: string;
+  customer_name: string;
+  phone: string;
+  village: string;
+  address: string;
+  notes: string;
+  items: CartLine[] | string;
+  subtotal: number | string;
+  delivery_fee: number | string;
+  total: number | string;
+  payment_method: "cash";
+};
 
 function generateOrderId() {
   const stamp = Date.now().toString(36).toUpperCase();
@@ -54,40 +32,121 @@ function generateOrderId() {
   return `ZN-${stamp.slice(-5)}${rand}`;
 }
 
+function rowToOrder(row: OrderRow): Order {
+  const items =
+    typeof row.items === "string"
+      ? (JSON.parse(row.items) as CartLine[])
+      : row.items;
+  return {
+    id: row.id,
+    createdAt:
+      row.created_at instanceof Date
+        ? row.created_at.toISOString()
+        : String(row.created_at),
+    status: row.status,
+    storeId: row.store_id,
+    storeName: row.store_name,
+    customerName: row.customer_name,
+    phone: row.phone,
+    village: row.village,
+    address: row.address,
+    notes: row.notes ?? "",
+    items,
+    subtotal: Number(row.subtotal),
+    deliveryFee: Number(row.delivery_fee),
+    total: Number(row.total),
+    paymentMethod: "cash",
+  };
+}
+
+export async function readOrders(): Promise<Order[]> {
+  if (!hasDatabase()) return readOrdersFile();
+
+  const sql = getSql();
+  const rows = await sql<OrderRow[]>`
+    SELECT
+      id, created_at, status, store_id, store_name,
+      customer_name, phone, village, address, notes,
+      items, subtotal, delivery_fee, total, payment_method
+    FROM orders
+    ORDER BY created_at DESC
+    LIMIT 2000
+  `;
+  return rows.map(rowToOrder);
+}
+
 export async function createOrder(
   input: Omit<Order, "id" | "createdAt" | "status" | "paymentMethod">
 ): Promise<Order> {
-  return enqueue(async () => {
-    const orders = await readOrdersUnsafe();
-    const order: Order = {
-      ...input,
-      id: generateOrderId(),
-      createdAt: new Date().toISOString(),
-      status: "new",
-      paymentMethod: "cash",
-    };
-    orders.unshift(order);
-    // Keep file lean — last 2000 orders
-    if (orders.length > 2000) orders.length = 2000;
-    await writeOrdersAtomic(orders);
-    return order;
-  });
+  const order: Order = {
+    ...input,
+    id: generateOrderId(),
+    createdAt: new Date().toISOString(),
+    status: "new",
+    paymentMethod: "cash",
+  };
+
+  if (!hasDatabase()) return createOrderFile(order);
+
+  const sql = getSql();
+  const rows = await sql<OrderRow[]>`
+    INSERT INTO orders (
+      id, created_at, status, store_id, store_name,
+      customer_name, phone, village, address, notes,
+      items, subtotal, delivery_fee, total, payment_method
+    ) VALUES (
+      ${order.id},
+      ${order.createdAt},
+      ${order.status},
+      ${order.storeId},
+      ${order.storeName},
+      ${order.customerName},
+      ${order.phone},
+      ${order.village},
+      ${order.address},
+      ${order.notes},
+      ${sql.json(order.items)},
+      ${order.subtotal},
+      ${order.deliveryFee},
+      ${order.total},
+      ${order.paymentMethod}
+    )
+    RETURNING
+      id, created_at, status, store_id, store_name,
+      customer_name, phone, village, address, notes,
+      items, subtotal, delivery_fee, total, payment_method
+  `;
+  return rowToOrder(rows[0]);
 }
 
 export async function getOrderById(id: string) {
-  const orders = await readOrders();
-  return orders.find((o) => o.id.toLowerCase() === id.toLowerCase());
+  if (!hasDatabase()) return getOrderByIdFile(id);
+
+  const sql = getSql();
+  const rows = await sql<OrderRow[]>`
+    SELECT
+      id, created_at, status, store_id, store_name,
+      customer_name, phone, village, address, notes,
+      items, subtotal, delivery_fee, total, payment_method
+    FROM orders
+    WHERE lower(id) = lower(${id})
+    LIMIT 1
+  `;
+  return rows[0] ? rowToOrder(rows[0]) : undefined;
 }
 
 export async function updateOrderStatus(id: string, status: OrderStatus) {
-  return enqueue(async () => {
-    const orders = await readOrdersUnsafe();
-    const index = orders.findIndex(
-      (o) => o.id.toLowerCase() === id.toLowerCase()
-    );
-    if (index === -1) return null;
-    orders[index] = { ...orders[index], status };
-    await writeOrdersAtomic(orders);
-    return orders[index];
-  });
+  if (!hasDatabase()) return updateOrderStatusFile(id, status);
+
+  const sql = getSql();
+  const rows = await sql<OrderRow[]>`
+    UPDATE orders
+    SET status = ${status}
+    WHERE lower(id) = lower(${id})
+    RETURNING
+      id, created_at, status, store_id, store_name,
+      customer_name, phone, village, address, notes,
+      items, subtotal, delivery_fee, total, payment_method
+  `;
+  return rows[0] ? rowToOrder(rows[0]) : null;
 }
