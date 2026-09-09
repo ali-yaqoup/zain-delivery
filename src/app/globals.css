@@ -1,0 +1,262 @@
+@import "tailwindcss";
+
+:root {
+  --canvas: #0b0b0b;
+  --surface: #141414;
+  --surface-2: #1c1c1c;
+  --surface-3: #262626;
+  --border: #2e2e2e;
+  --border-strong: #3f3f3f;
+  --text: #f4f1ef;
+  --text-muted: #a8a29e;
+  --text-soft: #78716c;
+  --orange: #ff6b00;
+  --orange-hover: #ff8533;
+  --orange-glow: rgba(255, 107, 0, 0.18);
+  --amber: #f59e0b;
+  --green: #10b981;
+  --red: #ef4444;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-soft: var(--text-soft);
+  --color-brand: var(--orange);
+  --color-brand-hover: var(--orange-hover);
+  --color-amber: var(--amber);
+  --color-success: var(--green);
+  --color-danger: var(--red);
+  --font-sans: var(--font-tajawal);
+  --font-display: var(--font-noto-kufi);
+  --font-mono: var(--font-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--text);
+  font-family: var(--font-tajawal), "Segoe UI", Tahoma, sans-serif;
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.cart-open {
+  overflow: hidden;
+}
+
+::selection {
+  background: rgba(255, 107, 0, 0.35);
+  color: white;
+}
+
+:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+/* Native <option> lists use the OS light popup — force readable dark text */
+select option {
+  color: #111111;
+  background-color: #ffffff;
+}
+
+.font-display {
+  font-family: var(--font-noto-kufi), var(--font-tajawal), sans-serif;
+}
+
+.unicode-bidi-isolate {
+  unicode-bidi: isolate;
+}
+
+.glow-brand {
+  box-shadow: 0 0 24px var(--orange-glow);
+}
+
+.btn-press {
+  transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+.card-hover {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.card-hover:hover {
+  border-color: rgba(255, 107, 0, 0.55);
+  box-shadow: 0 0 28px var(--orange-glow), inset 0 1px 0 rgba(255, 107, 0, 0.18);
+  transform: translateY(-3px);
+}
+
+.atmosphere {
+  background:
+    radial-gradient(ellipse 80% 50% at 100% -10%, rgba(255, 107, 0, 0.16), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 0% 20%, rgba(245, 158, 11, 0.08), transparent 50%),
+    var(--canvas);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-start {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.7);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.55s ease both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease both;
+}
+
+.animate-slide-drawer {
+  animation: slide-in-start 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-pop {
+  animation: pop 0.35s ease;
+}
+
+.animate-toast {
+  animation: toast-in 0.3s ease both;
+}
+
+.animate-float {
+  animation: float-soft 4.5s ease-in-out infinite;
+}
+
+.animate-delay-1 {
+  animation-delay: 0.08s;
+}
+
+.animate-delay-2 {
+  animation-delay: 0.16s;
+}
+
+.animate-delay-3 {
+  animation-delay: 0.24s;
+}
+
+.qty-btn {
+  transition: transform 0.12s ease, background-color 0.15s ease;
+}
+
+.qty-btn:active {
+  transform: scale(0.9);
+}
+
+.field {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.field:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.18);
+}
+
+.chip-scroll {
+  scrollbar-width: none;
+}
+
+.chip-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
