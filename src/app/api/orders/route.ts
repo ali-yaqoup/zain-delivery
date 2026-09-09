@@ -7,12 +7,30 @@ import {
   applySiteSettingsToStores,
   feeForVillage,
 } from "@/lib/site-settings";
+import {
+  clientIp,
+  createTrackToken,
+  isAdminAuthorized,
+  normalizePhone,
+} from "@/lib/admin-auth";
+import { rateLimit } from "@/lib/rate-limit";
+import { resolveOrderItems } from "@/lib/resolve-order-items";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  const auth = request.headers.get("x-admin-key");
-  if (auth !== process.env.ADMIN_PASSWORD && auth !== "zain2026") {
+  const ip = clientIp(request);
+  if (!isAdminAuthorized(request)) {
+    const limited = rateLimit(`admin-login:${ip}`, 12, 60_000);
+    if (!limited.ok) {
+      return NextResponse.json(
+        { error: "محاولات كثيرة، حاول بعد قليل" },
+        {
+          status: 429,
+          headers: { "Retry-After": String(limited.retryAfterSec) },
+        }
+      );
+    }
     return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
   }
   const orders = await readOrders();
@@ -23,6 +41,18 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const ip = clientIp(request);
+  const limited = rateLimit(`order:${ip}`, 8, 60_000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: "محاولات كثيرة، حاول بعد قليل" },
+      {
+        status: 429,
+        headers: { "Retry-After": String(limited.retryAfterSec) },
+      }
+    );
+  }
+
   try {
     const body = await request.json();
     const {
@@ -43,7 +73,6 @@ export async function POST(request: NextRequest) {
       storeId: string;
       storeName: string;
       items: CartLine[];
-      subtotal?: number;
     };
 
     if (
@@ -57,6 +86,14 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "بيانات الطلب ناقصة" },
+        { status: 400 }
+      );
+    }
+
+    const phoneDigits = normalizePhone(phone);
+    if (phoneDigits.length < 9 || phoneDigits.length > 15) {
+      return NextResponse.json(
+        { error: "رقم الهاتف غير صالح" },
         { status: 400 }
       );
     }
@@ -76,29 +113,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "المحل غير موجود" }, { status: 400 });
     }
 
-    const minOrder = store.minOrder;
+    const resolved = resolveOrderItems({ store, settings, items });
+    if (!resolved.ok) {
+      return NextResponse.json({ error: resolved.error }, { status: 400 });
+    }
 
-    const safeItems = items.map((line) => ({
-      lineId: String(line.lineId || line.itemId),
-      itemId: String(line.itemId),
-      storeId: String(line.storeId || storeId),
-      name: String(line.name).slice(0, 120),
-      sizeLabel: line.sizeLabel
-        ? String(line.sizeLabel).slice(0, 40)
-        : undefined,
-      price: Number(line.price) || 0,
-      quantity: Math.min(99, Math.max(1, Number(line.quantity) || 1)),
-      image: String(line.image || "").slice(0, 500),
-    }));
-
+    const safeItems = resolved.items;
     const computedSubtotal = safeItems.reduce(
       (sum, line) => sum + line.price * line.quantity,
       0
     );
 
-    if (computedSubtotal < minOrder) {
+    if (computedSubtotal < store.minOrder) {
       return NextResponse.json(
-        { error: `الحد الأدنى للطلب ${minOrder} ₪` },
+        { error: `الحد الأدنى للطلب ${store.minOrder} ₪` },
         { status: 400 }
       );
     }
@@ -120,8 +148,10 @@ export async function POST(request: NextRequest) {
       total,
     });
 
+    const trackToken = createTrackToken(order.id, order.phone);
+
     return NextResponse.json(
-      { order },
+      { order, trackToken },
       {
         status: 201,
         headers: { "Cache-Control": "no-store" },

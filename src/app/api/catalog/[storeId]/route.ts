@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryMutawaCatalog } from "@/lib/mutawa-catalog";
 import { readSettings } from "@/lib/settings-store";
+import { isAdminAuthorized } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 
@@ -15,7 +16,12 @@ export async function GET(
 
   const { searchParams } = request.nextUrl;
   const settings = await readSettings();
-  const includeHidden = searchParams.get("admin") === "1";
+  const wantAdmin = searchParams.get("admin") === "1";
+  const includeHidden = wantAdmin && isAdminAuthorized(request);
+
+  if (wantAdmin && !includeHidden) {
+    return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  }
 
   const result = queryMutawaCatalog({
     q: searchParams.get("q") || undefined,

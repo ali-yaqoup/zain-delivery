@@ -13,6 +13,31 @@ import { BrandMark } from "@/components/icons";
 
 const ADMIN_KEY_STORAGE = "zain-admin-key";
 
+function readAdminKey() {
+  try {
+    return sessionStorage.getItem(ADMIN_KEY_STORAGE) || "";
+  } catch {
+    return "";
+  }
+}
+
+function writeAdminKey(value: string) {
+  try {
+    sessionStorage.setItem(ADMIN_KEY_STORAGE, value);
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearAdminKey() {
+  try {
+    sessionStorage.removeItem(ADMIN_KEY_STORAGE);
+    localStorage.removeItem(ADMIN_KEY_STORAGE);
+  } catch {
+    /* ignore */
+  }
+}
+
 type AdminTab = "orders" | "settings";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -65,7 +90,7 @@ export default function AdminPage() {
         if (!res.ok) throw new Error(data.error || "فشل التحميل");
         setOrders(data.orders);
         setAuthed(true);
-        localStorage.setItem(ADMIN_KEY_STORAGE, adminKey);
+        writeAdminKey(adminKey);
       } catch (err) {
         setAuthed(false);
         setError(err instanceof Error ? err.message : "خطأ");
@@ -77,7 +102,7 @@ export default function AdminPage() {
   );
 
   useEffect(() => {
-    const saved = localStorage.getItem(ADMIN_KEY_STORAGE);
+    const saved = readAdminKey();
     if (saved) {
       setKey(saved);
       loadOrders(saved);
@@ -160,7 +185,9 @@ export default function AdminPage() {
   }
 
   function logout() {
-    localStorage.removeItem(ADMIN_KEY_STORAGE);
+    clearAdminKey();
+    setKey("");
+    setOrders([]);
     setAuthed(false);
   }
 

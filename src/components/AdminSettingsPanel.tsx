@@ -152,7 +152,8 @@ export function AdminSettingsPanel({
     setSearching(true);
     try {
       const res = await fetch(
-        `/api/catalog/mutawa?q=${encodeURIComponent(q)}&limit=20&admin=1`
+        `/api/catalog/mutawa?q=${encodeURIComponent(q)}&limit=20&admin=1`,
+        { headers: { "x-admin-key": adminKey } }
       );
       const data = await res.json();
       if (res.ok) setMutawaResults(data.items || []);

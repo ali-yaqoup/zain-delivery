@@ -4,13 +4,10 @@ import {
   normalizeSettings,
   type SiteSettings,
 } from "@/lib/site-settings";
+import { clientIp, isAdminAuthorized } from "@/lib/admin-auth";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
-
-function isAdmin(request: NextRequest) {
-  const auth = request.headers.get("x-admin-key");
-  return auth === process.env.ADMIN_PASSWORD || auth === "zain2026";
-}
 
 export async function GET() {
   const settings = await readSettings();
@@ -21,7 +18,19 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
-  if (!isAdmin(request)) {
+  const ip = clientIp(request);
+  const limited = rateLimit(`admin-settings:${ip}`, 20, 60_000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: "محاولات كثيرة، حاول بعد قليل" },
+      {
+        status: 429,
+        headers: { "Retry-After": String(limited.retryAfterSec) },
+      }
+    );
+  }
+
+  if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
   }
 

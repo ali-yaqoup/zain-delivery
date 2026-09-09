@@ -1,6 +1,7 @@
 import "server-only";
 import type { CartLine, Order, OrderStatus } from "./types";
 import { getSql, hasDatabase } from "./db";
+import { newOrderId } from "./admin-auth";
 import {
   createOrderFile,
   getOrderByIdFile,
@@ -25,12 +26,6 @@ type OrderRow = {
   total: number | string;
   payment_method: "cash";
 };
-
-function generateOrderId() {
-  const stamp = Date.now().toString(36).toUpperCase();
-  const rand = Math.random().toString(36).slice(2, 5).toUpperCase();
-  return `ZN-${stamp.slice(-5)}${rand}`;
-}
 
 function rowToOrder(row: OrderRow): Order {
   const items =
@@ -80,7 +75,7 @@ export async function createOrder(
 ): Promise<Order> {
   const order: Order = {
     ...input,
-    id: generateOrderId(),
+    id: newOrderId(),
     createdAt: new Date().toISOString(),
     status: "new",
     paymentMethod: "cash",

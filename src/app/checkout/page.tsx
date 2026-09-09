@@ -71,7 +71,10 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "فشل إرسال الطلب");
       clearCart();
-      router.push(`/track/${data.order.id}?new=1`);
+      const token = data.trackToken
+        ? `&t=${encodeURIComponent(data.trackToken)}`
+        : "";
+      router.push(`/track/${data.order.id}?new=1${token}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "حدث خطأ");
     } finally {

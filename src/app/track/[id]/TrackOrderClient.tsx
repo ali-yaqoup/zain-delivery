@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { formatPrice } from "@/lib/stores";
 import type { Order, OrderStatus } from "@/lib/types";
 
@@ -22,13 +22,24 @@ const STATUS_ORDER: OrderStatus[] = [
   "delivered",
 ];
 
+type TrackOrder = Order & { redacted?: boolean };
+
 export default function TrackOrderClient() {
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const isNew = searchParams.get("new") === "1";
-  const [order, setOrder] = useState<Order | null>(null);
+  const urlToken = searchParams.get("t") || "";
+  const [order, setOrder] = useState<TrackOrder | null>(null);
+  const [access, setAccess] = useState<"public" | "full">("public");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [phoneUnlock, setPhoneUnlock] = useState("");
+  const [unlockError, setUnlockError] = useState("");
+  const [token, setToken] = useState(urlToken);
+
+  useEffect(() => {
+    setToken(urlToken);
+  }, [urlToken]);
 
   useEffect(() => {
     let alive = true;
@@ -36,11 +47,18 @@ export default function TrackOrderClient() {
     async function load() {
       if (first) setLoading(true);
       try {
-        const res = await fetch(`/api/orders/${encodeURIComponent(params.id)}`);
+        const qs = new URLSearchParams();
+        if (token) qs.set("t", token);
+        const res = await fetch(
+          `/api/orders/${encodeURIComponent(params.id)}${
+            qs.toString() ? `?${qs.toString()}` : ""
+          }`
+        );
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "الطلب غير موجود");
         if (alive) {
           setOrder(data.order);
+          setAccess(data.access === "full" ? "full" : "public");
           setError("");
         }
       } catch (err) {
@@ -58,7 +76,32 @@ export default function TrackOrderClient() {
       alive = false;
       clearInterval(timer);
     };
-  }, [params.id]);
+  }, [params.id, token]);
+
+  async function onUnlock(e: FormEvent) {
+    e.preventDefault();
+    setUnlockError("");
+    const phone = phoneUnlock.trim();
+    if (!phone) {
+      setUnlockError("أدخل رقم الهاتف المستخدم في الطلب");
+      return;
+    }
+    try {
+      const res = await fetch(
+        `/api/orders/${encodeURIComponent(params.id)}?phone=${encodeURIComponent(phone)}`
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "تعذر التحقق");
+      if (data.access !== "full") {
+        setUnlockError("رقم الهاتف غير مطابق لهذا الطلب");
+        return;
+      }
+      setOrder(data.order);
+      setAccess("full");
+    } catch (err) {
+      setUnlockError(err instanceof Error ? err.message : "تعذر التحقق");
+    }
+  }
 
   if (loading) {
     return (
@@ -82,12 +125,13 @@ export default function TrackOrderClient() {
 
   const currentIndex =
     order.status === "cancelled" ? -1 : STATUS_ORDER.indexOf(order.status);
+  const isRedacted = access !== "full";
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
       {isNew && (
         <div className="mb-6 rounded-2xl border border-success/40 bg-success/10 px-4 py-3 text-sm text-success">
-          تم إرسال طلبك بنجاح! احفظ رقم الطلب للمتابعة.
+          تم إرسال طلبك بنجاح! احفظ رابط التتبع أو رقم الطلب للمتابعة.
         </div>
       )}
 
@@ -119,9 +163,38 @@ export default function TrackOrderClient() {
             {order.customerName} • {order.phone}
           </p>
           <p className="text-sm text-muted">
-            {order.village} — {order.address}
+            {order.village}
+            {isRedacted ? " — عنوان مخفي لحماية الخصوصية" : ` — ${order.address}`}
           </p>
         </div>
+
+        {isRedacted && (
+          <form
+            onSubmit={onUnlock}
+            className="rounded-2xl border border-border bg-surface-2 p-4 space-y-3"
+          >
+            <p className="text-sm text-muted">
+              لعرض الاسم والعنوان ورقم الهاتف كاملًا، أدخل رقم الهاتف المستخدم عند الطلب.
+            </p>
+            <input
+              value={phoneUnlock}
+              onChange={(e) => setPhoneUnlock(e.target.value)}
+              placeholder="رقم الهاتف"
+              inputMode="tel"
+              autoComplete="tel"
+              className="field w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm"
+            />
+            {unlockError && (
+              <p className="text-xs text-danger">{unlockError}</p>
+            )}
+            <button
+              type="submit"
+              className="btn-press rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white"
+            >
+              إظهار التفاصيل
+            </button>
+          </form>
+        )}
 
         {order.status !== "cancelled" && (
           <ol className="space-y-3">
