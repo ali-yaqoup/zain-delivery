@@ -2,27 +2,47 @@ import "server-only";
 import { createHmac, timingSafeEqual, randomBytes } from "crypto";
 import type { NextRequest } from "next/server";
 
-/** Fail closed: admin routes require ADMIN_PASSWORD env (no hardcoded fallback). */
+function safeEqualString(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  try {
+    return timingSafeEqual(bufA, bufB);
+  } catch {
+    return false;
+  }
+}
+
+function normalizeEmail(value: string) {
+  return value.trim().toLowerCase();
+}
+
+/** Fail closed: admin routes require ADMIN_EMAIL + ADMIN_PASSWORD (no hardcoded fallback). */
+export function getAdminEmail(): string | null {
+  const value = process.env.ADMIN_EMAIL?.trim();
+  return value ? normalizeEmail(value) : null;
+}
+
 export function getAdminPassword(): string | null {
   const value = process.env.ADMIN_PASSWORD?.trim();
   return value ? value : null;
 }
 
 export function isAdminAuthorized(request: NextRequest): boolean {
-  const expected = getAdminPassword();
-  if (!expected) return false;
+  const expectedEmail = getAdminEmail();
+  const expectedPassword = getAdminPassword();
+  if (!expectedEmail || !expectedPassword) return false;
 
-  const provided = request.headers.get("x-admin-key")?.trim() || "";
-  if (!provided) return false;
+  const providedEmail = normalizeEmail(
+    request.headers.get("x-admin-email") || ""
+  );
+  const providedPassword = request.headers.get("x-admin-key")?.trim() || "";
+  if (!providedEmail || !providedPassword) return false;
 
-  const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  try {
-    return timingSafeEqual(a, b);
-  } catch {
-    return false;
-  }
+  return (
+    safeEqualString(providedEmail, expectedEmail) &&
+    safeEqualString(providedPassword, expectedPassword)
+  );
 }
 
 export function normalizePhone(phone: string) {

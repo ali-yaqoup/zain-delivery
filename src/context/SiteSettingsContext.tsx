@@ -28,7 +28,11 @@ type SiteSettingsContextValue = {
   minDeliveryFee: number;
   loading: boolean;
   refresh: () => Promise<void>;
-  saveSettings: (next: SiteSettings, adminKey: string) => Promise<SiteSettings>;
+  saveSettings: (
+    next: SiteSettings,
+    adminEmail: string,
+    adminPassword: string
+  ) => Promise<SiteSettings>;
 };
 
 const SiteSettingsContext = createContext<SiteSettingsContextValue | null>(null);
@@ -54,12 +58,13 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const saveSettings = useCallback(
-    async (next: SiteSettings, adminKey: string) => {
+    async (next: SiteSettings, adminEmail: string, adminPassword: string) => {
       const res = await fetch("/api/settings", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-key": adminKey,
+          "x-admin-email": adminEmail.trim().toLowerCase(),
+          "x-admin-key": adminPassword,
         },
         body: JSON.stringify({ settings: next }),
       });

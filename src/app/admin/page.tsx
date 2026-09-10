@@ -10,27 +10,34 @@ import {
   type AdminSettingsSection,
 } from "@/components/AdminSettingsPanel";
 import { BrandMark } from "@/components/icons";
+import { adminAuthHeaders } from "@/lib/admin-client";
 
+const ADMIN_EMAIL_STORAGE = "zain-admin-email";
 const ADMIN_KEY_STORAGE = "zain-admin-key";
 
-function readAdminKey() {
+function readAdminSession() {
   try {
-    return sessionStorage.getItem(ADMIN_KEY_STORAGE) || "";
+    return {
+      email: sessionStorage.getItem(ADMIN_EMAIL_STORAGE) || "",
+      password: sessionStorage.getItem(ADMIN_KEY_STORAGE) || "",
+    };
   } catch {
-    return "";
+    return { email: "", password: "" };
   }
 }
 
-function writeAdminKey(value: string) {
+function writeAdminSession(email: string, password: string) {
   try {
-    sessionStorage.setItem(ADMIN_KEY_STORAGE, value);
+    sessionStorage.setItem(ADMIN_EMAIL_STORAGE, email);
+    sessionStorage.setItem(ADMIN_KEY_STORAGE, password);
   } catch {
     /* ignore */
   }
 }
 
-function clearAdminKey() {
+function clearAdminSession() {
   try {
+    sessionStorage.removeItem(ADMIN_EMAIL_STORAGE);
     sessionStorage.removeItem(ADMIN_KEY_STORAGE);
     localStorage.removeItem(ADMIN_KEY_STORAGE);
   } catch {
@@ -67,7 +74,8 @@ function navBtnClass(active: boolean) {
 }
 
 export default function AdminPage() {
-  const [key, setKey] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState("");
@@ -79,18 +87,18 @@ export default function AdminPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const loadOrders = useCallback(
-    async (adminKey: string) => {
+    async (adminEmail: string, adminPassword: string) => {
       setLoading(true);
       setError("");
       try {
         const res = await fetch("/api/orders", {
-          headers: { "x-admin-key": adminKey },
+          headers: adminAuthHeaders(adminEmail, adminPassword),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "فشل التحميل");
         setOrders(data.orders);
         setAuthed(true);
-        writeAdminKey(adminKey);
+        writeAdminSession(adminEmail.trim().toLowerCase(), adminPassword);
       } catch (err) {
         setAuthed(false);
         setError(err instanceof Error ? err.message : "خطأ");
@@ -102,22 +110,23 @@ export default function AdminPage() {
   );
 
   useEffect(() => {
-    const saved = readAdminKey();
-    if (saved) {
-      setKey(saved);
-      loadOrders(saved);
+    const saved = readAdminSession();
+    if (saved.email && saved.password) {
+      setEmail(saved.email);
+      setPassword(saved.password);
+      loadOrders(saved.email, saved.password);
     }
   }, [loadOrders]);
 
   useEffect(() => {
     if (!authed) return;
-    const timer = setInterval(() => loadOrders(key), 10000);
+    const timer = setInterval(() => loadOrders(email, password), 10000);
     return () => clearInterval(timer);
-  }, [authed, key, loadOrders]);
+  }, [authed, email, password, loadOrders]);
 
   async function onLogin(e: FormEvent) {
     e.preventDefault();
-    await loadOrders(key.trim());
+    await loadOrders(email.trim().toLowerCase(), password);
   }
 
   async function updateStatus(id: string, status: OrderStatus) {
@@ -125,7 +134,7 @@ export default function AdminPage() {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "x-admin-key": key,
+        ...adminAuthHeaders(email, password),
       },
       body: JSON.stringify({ status }),
     });
@@ -185,8 +194,9 @@ export default function AdminPage() {
   }
 
   function logout() {
-    clearAdminKey();
-    setKey("");
+    clearAdminSession();
+    setEmail("");
+    setPassword("");
     setOrders([]);
     setAuthed(false);
   }
@@ -256,16 +266,26 @@ export default function AdminPage() {
             </p>
           </div>
           <input
+            type="email"
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="البريد الإلكتروني"
+            className="w-full rounded-xl border border-border bg-surface-2 px-4 py-3 outline-none focus:border-brand"
+            dir="ltr"
+          />
+          <input
             type="password"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="كلمة مرور اللوحة"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="كلمة المرور"
             className="w-full rounded-xl border border-border bg-surface-2 px-4 py-3 outline-none focus:border-brand"
           />
           {error && <p className="text-sm text-danger">{error}</p>}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !email.trim() || !password}
             className="w-full rounded-xl bg-brand py-3 font-bold text-white hover:bg-brand-hover disabled:opacity-60"
           >
             {loading ? "جارٍ الدخول..." : "دخول"}
@@ -350,7 +370,7 @@ export default function AdminPage() {
               {tab === "orders" && (
                 <button
                   type="button"
-                  onClick={() => loadOrders(key)}
+                  onClick={() => loadOrders(email, password)}
                   className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm"
                 >
                   تحديث
@@ -400,7 +420,8 @@ export default function AdminPage() {
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
           {tab === "settings" ? (
             <AdminSettingsPanel
-              adminKey={key}
+              adminEmail={email}
+              adminPassword={password}
               section={settingsSection}
             />
           ) : (

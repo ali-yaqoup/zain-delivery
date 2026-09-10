@@ -48,10 +48,12 @@ const inputClass =
   "w-full rounded-lg border border-border bg-canvas px-3 py-2 outline-none focus:border-brand";
 
 export function AdminSettingsPanel({
-  adminKey,
+  adminEmail,
+  adminPassword,
   section,
 }: {
-  adminKey: string;
+  adminEmail: string;
+  adminPassword: string;
   section: Section;
 }) {
   const { settings, stores, saveSettings, refresh } = useSiteSettings();
@@ -153,7 +155,12 @@ export function AdminSettingsPanel({
     try {
       const res = await fetch(
         `/api/catalog/mutawa?q=${encodeURIComponent(q)}&limit=20&admin=1`,
-        { headers: { "x-admin-key": adminKey } }
+        {
+          headers: {
+            "x-admin-email": adminEmail.trim().toLowerCase(),
+            "x-admin-key": adminPassword,
+          },
+        }
       );
       const data = await res.json();
       if (res.ok) setMutawaResults(data.items || []);
@@ -187,7 +194,7 @@ export function AdminSettingsPanel({
         ...draft,
         kingMenu: draft.kingMenu?.length ? draft.kingMenu : draft.kingMenu,
       };
-      await saveSettings(toSave, adminKey);
+      await saveSettings(toSave, adminEmail, adminPassword);
       await refresh();
       setMessage("تم حفظ كل التعديلات — الموقع محدّث فوراً");
     } catch (err) {
