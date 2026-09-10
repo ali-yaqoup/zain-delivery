@@ -49,7 +49,7 @@ export function BrandMark({
       alt=""
       width={typeof size === "number" ? size : 40}
       height={typeof size === "number" ? size : 40}
-      className={`inline-block rounded-xl object-cover shadow-[0_0_20px_rgba(255,107,0,0.35)] ${className}`}
+      className={`inline-block object-contain ${className}`}
       style={{ width: box, height: box }}
       aria-hidden
     />
