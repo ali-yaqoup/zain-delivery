@@ -51,7 +51,20 @@ body {
   color: var(--text);
   font-family: var(--font-tajawal), "Segoe UI", Tahoma, sans-serif;
   min-height: 100vh;
+  min-height: 100dvh;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* PWA / notched phones: keep UI below system status bar */
+.site-header {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .site-header {
+    /* Android PWAs sometimes report 0 inset — keep a minimum gap */
+    padding-top: max(env(safe-area-inset-top, 0px), 0.75rem);
+  }
 }
 
 body.cart-open {

@@ -70,7 +70,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "black",
     title: SITE_NAME_AR,
   },
   icons: {
@@ -122,10 +122,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0b0b0b" },
-    { media: "(prefers-color-scheme: light)", color: "#ff6b00" },
-  ],
+  themeColor: "#0b0b0b",
   colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
@@ -147,7 +144,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <SiteSettingsProvider>
             <CartProvider>
               <SiteHeader />
-              <main className="flex-1 w-full pb-24 md:pb-0">{children}</main>
+              <main className="flex-1 w-full pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+                {children}
+              </main>
               <SiteFooter />
               <CartDrawer />
               <MobileCartBar />
