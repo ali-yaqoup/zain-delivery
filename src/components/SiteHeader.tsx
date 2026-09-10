@@ -37,13 +37,7 @@ export function SiteHeader() {
         <Link href="/" className="group flex min-w-0 items-center gap-2.5 sm:gap-3">
           <BrandMark
             size={36}
-            className="shrink-0 transition group-hover:scale-105 sm:hidden"
-            iconSize={26}
-          />
-          <BrandMark
-            size={40}
-            className="hidden shrink-0 transition group-hover:scale-105 sm:inline-block"
-            iconSize={28}
+            className="shrink-0 transition group-hover:scale-105 sm:!w-10 sm:!h-10"
           />
           <span className="flex min-w-0 flex-col leading-tight">
             <span className="font-display truncate text-base font-bold text-ink group-hover:text-brand transition-colors sm:text-lg">
