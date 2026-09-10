@@ -35,22 +35,24 @@ export function DeliveryScooterIcon(props: IconProps) {
 export function BrandMark({
   size = 40,
   className = "",
-  iconSize,
+  iconSize: _iconSize,
 }: {
   size?: number;
   className?: string;
   iconSize?: number;
 }) {
   const box = typeof size === "number" ? `${size}px` : size;
-  const glyph = iconSize ?? Math.round((typeof size === "number" ? size : 40) * 0.72);
   return (
-    <span
-      className={`inline-flex items-center justify-center rounded-xl bg-brand text-white shadow-[0_0_20px_rgba(255,107,0,0.35)] ${className}`}
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/icons/logo.png"
+      alt=""
+      width={typeof size === "number" ? size : 40}
+      height={typeof size === "number" ? size : 40}
+      className={`inline-block rounded-xl object-cover shadow-[0_0_20px_rgba(255,107,0,0.35)] ${className}`}
       style={{ width: box, height: box }}
       aria-hidden
-    >
-      <DeliveryScooterIcon size={glyph} className="text-black" />
-    </span>
+    />
   );
 }
 
