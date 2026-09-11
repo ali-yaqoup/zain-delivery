@@ -14,22 +14,42 @@ import { adminAuthHeaders } from "@/lib/admin-client";
 
 const ADMIN_EMAIL_STORAGE = "zain-admin-email";
 const ADMIN_KEY_STORAGE = "zain-admin-key";
+const ADMIN_REMEMBER_STORAGE = "zain-admin-remember";
 
 function readAdminSession() {
   try {
+    const remembered = localStorage.getItem(ADMIN_REMEMBER_STORAGE) === "1";
+    const store = remembered ? localStorage : sessionStorage;
     return {
-      email: sessionStorage.getItem(ADMIN_EMAIL_STORAGE) || "",
-      password: sessionStorage.getItem(ADMIN_KEY_STORAGE) || "",
+      email: store.getItem(ADMIN_EMAIL_STORAGE) || "",
+      password: store.getItem(ADMIN_KEY_STORAGE) || "",
+      remember: remembered,
     };
   } catch {
-    return { email: "", password: "" };
+    return { email: "", password: "", remember: false };
   }
 }
 
-function writeAdminSession(email: string, password: string) {
+function writeAdminSession(
+  email: string,
+  password: string,
+  remember: boolean
+) {
   try {
-    sessionStorage.setItem(ADMIN_EMAIL_STORAGE, email);
-    sessionStorage.setItem(ADMIN_KEY_STORAGE, password);
+    sessionStorage.removeItem(ADMIN_EMAIL_STORAGE);
+    sessionStorage.removeItem(ADMIN_KEY_STORAGE);
+    localStorage.removeItem(ADMIN_EMAIL_STORAGE);
+    localStorage.removeItem(ADMIN_KEY_STORAGE);
+
+    const store = remember ? localStorage : sessionStorage;
+    store.setItem(ADMIN_EMAIL_STORAGE, email);
+    store.setItem(ADMIN_KEY_STORAGE, password);
+
+    if (remember) {
+      localStorage.setItem(ADMIN_REMEMBER_STORAGE, "1");
+    } else {
+      localStorage.removeItem(ADMIN_REMEMBER_STORAGE);
+    }
   } catch {
     /* ignore */
   }
@@ -39,7 +59,9 @@ function clearAdminSession() {
   try {
     sessionStorage.removeItem(ADMIN_EMAIL_STORAGE);
     sessionStorage.removeItem(ADMIN_KEY_STORAGE);
+    localStorage.removeItem(ADMIN_EMAIL_STORAGE);
     localStorage.removeItem(ADMIN_KEY_STORAGE);
+    localStorage.removeItem(ADMIN_REMEMBER_STORAGE);
   } catch {
     /* ignore */
   }
@@ -76,6 +98,7 @@ function navBtnClass(active: boolean) {
 export default function AdminPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [authed, setAuthed] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState("");
@@ -87,7 +110,7 @@ export default function AdminPage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const loadOrders = useCallback(
-    async (adminEmail: string, adminPassword: string) => {
+    async (adminEmail: string, adminPassword: string, remember: boolean) => {
       setLoading(true);
       setError("");
       try {
@@ -98,7 +121,12 @@ export default function AdminPage() {
         if (!res.ok) throw new Error(data.error || "فشل التحميل");
         setOrders(data.orders);
         setAuthed(true);
-        writeAdminSession(adminEmail.trim().toLowerCase(), adminPassword);
+        setRememberMe(remember);
+        writeAdminSession(
+          adminEmail.trim().toLowerCase(),
+          adminPassword,
+          remember
+        );
       } catch (err) {
         setAuthed(false);
         setError(err instanceof Error ? err.message : "خطأ");
@@ -114,19 +142,23 @@ export default function AdminPage() {
     if (saved.email && saved.password) {
       setEmail(saved.email);
       setPassword(saved.password);
-      loadOrders(saved.email, saved.password);
+      setRememberMe(saved.remember);
+      loadOrders(saved.email, saved.password, saved.remember);
     }
   }, [loadOrders]);
 
   useEffect(() => {
     if (!authed) return;
-    const timer = setInterval(() => loadOrders(email, password), 10000);
+    const timer = setInterval(
+      () => loadOrders(email, password, rememberMe),
+      10000
+    );
     return () => clearInterval(timer);
-  }, [authed, email, password, loadOrders]);
+  }, [authed, email, password, rememberMe, loadOrders]);
 
   async function onLogin(e: FormEvent) {
     e.preventDefault();
-    await loadOrders(email.trim().toLowerCase(), password);
+    await loadOrders(email.trim().toLowerCase(), password, rememberMe);
   }
 
   async function updateStatus(id: string, status: OrderStatus) {
@@ -282,6 +314,20 @@ export default function AdminPage() {
             placeholder="كلمة المرور"
             className="w-full rounded-xl border border-border bg-surface-2 px-4 py-3 outline-none focus:border-brand"
           />
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface-2/60 px-3 py-3 text-sm">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--orange)]"
+            />
+            <span>
+              <span className="font-semibold text-ink">البقاء مسجّل الدخول</span>
+              <span className="mt-0.5 block text-xs text-muted">
+                مناسب للشوفير — ما رح يطلب تسجيل كل ما يفتح التطبيق. فعّله بس على تلفونك.
+              </span>
+            </span>
+          </label>
           {error && <p className="text-sm text-danger">{error}</p>}
           <button
             type="submit"
@@ -370,7 +416,7 @@ export default function AdminPage() {
               {tab === "orders" && (
                 <button
                   type="button"
-                  onClick={() => loadOrders(email, password)}
+                  onClick={() => loadOrders(email, password, rememberMe)}
                   className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm"
                 >
                   تحديث
