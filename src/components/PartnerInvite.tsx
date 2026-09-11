@@ -20,7 +20,8 @@ export function PartnerInvite({ compact = false }: { compact?: boolean }) {
 
   const wa = toWhatsAppNumber(phone);
   const waHref = `https://wa.me/${wa}?text=${encodeURIComponent(
-    c.partnerWhatsappText || "مرحبا، بدي أضيف محلي على زين دليفري"
+    c.partnerWhatsappText ||
+      "مرحبا علي يعقوب، بدي أضيف محلي/مطعمي على موقع زين دليفري"
   )}`;
   const telHref = `tel:+${wa}`;
 

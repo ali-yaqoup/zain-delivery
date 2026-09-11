@@ -145,7 +145,7 @@ export function defaultContent(): SiteContent {
     partnerCta: "تواصل واتساب",
     partnerPhone: "+972 59-434-8757",
     partnerWhatsappText:
-      "مرحبا زين دليفري، بدي أضيف محلي/مطعمي على الموقع",
+      "مرحبا علي يعقوب، بدي أضيف محلي/مطعمي على موقع زين دليفري",
   };
 }
 
