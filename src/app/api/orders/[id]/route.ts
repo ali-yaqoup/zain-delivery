@@ -76,6 +76,18 @@ export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  const ip = clientIp(request);
+  const limited = rateLimit(`admin-patch:${ip}`, 60, 60_000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: "محاولات كثيرة، حاول بعد قليل" },
+      {
+        status: 429,
+        headers: { "Retry-After": String(limited.retryAfterSec) },
+      }
+    );
+  }
+
   if (!isAdminAuthorized(request)) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
   }

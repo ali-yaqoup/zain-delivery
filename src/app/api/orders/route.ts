@@ -15,6 +15,7 @@ import {
 } from "@/lib/admin-auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { resolveOrderItems } from "@/lib/resolve-order-items";
+import { isStoreOpen } from "@/lib/store-hours";
 
 export const runtime = "nodejs";
 
@@ -111,6 +112,13 @@ export async function POST(request: NextRequest) {
       liveStores.find((s) => s.id === storeId) || getStoreById(storeId);
     if (!store) {
       return NextResponse.json({ error: "المحل غير موجود" }, { status: 400 });
+    }
+
+    if (!isStoreOpen(store)) {
+      return NextResponse.json(
+        { error: "المحل مغلق الآن — جرّب لاحقاً ضمن أوقات العمل" },
+        { status: 403 }
+      );
     }
 
     const resolved = resolveOrderItems({ store, settings, items });
