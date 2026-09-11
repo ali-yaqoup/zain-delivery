@@ -9,7 +9,23 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: "/sitemap.xml",
+        headers: [
+          { key: "Content-Type", value: "text/xml; charset=utf-8" },
+          { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
+        ],
+      },
+      {
+        source: "/robots.txt",
+        headers: [
+          { key: "Content-Type", value: "text/plain; charset=utf-8" },
+          { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
+        ],
+      },
+      {
+        // Keep security headers off sitemap/robots so crawlers can fetch cleanly
+        source:
+          "/((?!sitemap\\.xml$|robots\\.txt$|google.*\\.html$).*)",
         headers: [
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
