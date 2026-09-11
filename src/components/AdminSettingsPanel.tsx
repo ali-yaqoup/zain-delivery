@@ -276,37 +276,6 @@ export function AdminSettingsPanel({
               />
             </Field>
           </div>
-
-          <h4 className="pt-4 font-semibold">دعوة المحلات للانضمام</h4>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="عنوان الدعوة">
-              <input
-                className={inputClass}
-                value={draft.content.partnerTitle || ""}
-                onChange={(e) =>
-                  patchContent({ partnerTitle: e.target.value })
-                }
-              />
-            </Field>
-            <Field label="رقم واتساب / اتصال">
-              <input
-                className={inputClass}
-                placeholder="05XXXXXXXX"
-                value={draft.content.partnerPhone || ""}
-                onChange={(e) =>
-                  patchContent({ partnerPhone: e.target.value })
-                }
-              />
-            </Field>
-            <Field label="وصف الدعوة">
-              <textarea
-                rows={3}
-                className={inputClass}
-                value={draft.content.partnerText || ""}
-                onChange={(e) => patchContent({ partnerText: e.target.value })}
-              />
-            </Field>
-          </div>
         </section>
       )}
 
