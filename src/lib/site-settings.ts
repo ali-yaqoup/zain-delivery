@@ -254,6 +254,25 @@ export function normalizeSettings(
     };
   }
 
+  // Drop legacy Mutawa branding from saved profiles (keep generic Mini Market)
+  const market = storeProfiles["mutawa-market"];
+  if (market) {
+    const name = market.name?.trim() || "";
+    const nameEn = market.nameEn?.trim() || "";
+    const description = market.description?.trim() || "";
+    storeProfiles["mutawa-market"] = {
+      ...market,
+      name: name.includes("مطاوع") || name === "ميني ماركت مطاوع" ? "ميني ماركت" : market.name,
+      nameEn:
+        /mutawa/i.test(nameEn) || nameEn === "Mini Market Mutawa"
+          ? "Mini Market"
+          : market.nameEn,
+      description: description.includes("مطاوع")
+        ? description.replace(/ميني ماركت مطاوع/g, "ميني ماركت").replace(/مطاوع/g, "").replace(/\s{2,}/g, " ").trim()
+        : market.description,
+    };
+  }
+
   return {
     content,
     deliveryZones,

@@ -4,7 +4,7 @@ import StoresPageClient from "./StoresPageClient";
 export const metadata = buildPageMetadata({
   title: "المحلات والمطاعم",
   description:
-    "تصفح محلات ومطاعم زين دليفري في كفل حارس: كينج بيتزا وميني ماركت مطاوع مع توصيل سريع والدفع عند الاستلام.",
+    "تصفح محلات ومطاعم زين دليفري في كفل حارس: كينج بيتزا وميني ماركت مع توصيل سريع والدفع عند الاستلام.",
   path: "/stores",
 });
 

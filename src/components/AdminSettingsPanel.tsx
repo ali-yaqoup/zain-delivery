@@ -25,7 +25,7 @@ export const ADMIN_SETTINGS_SECTIONS: { id: Section; label: string }[] = [
   { id: "delivery", label: "التوصيل" },
   { id: "stores", label: "المحلات" },
   { id: "king", label: "منيو كينج" },
-  { id: "mutawa", label: "مطاوع" },
+  { id: "mutawa", label: "ميني ماركت" },
   { id: "footer", label: "الفوتر" },
 ];
 
@@ -789,7 +789,7 @@ export function AdminSettingsPanel({
 
       {section === "mutawa" && (
         <section className="space-y-4 rounded-2xl border border-border bg-surface p-5">
-          <h3 className="font-bold">تعديل أصناف ميني ماركت مطاوع</h3>
+          <h3 className="font-bold">تعديل أصناف الميني ماركت</h3>
           <p className="text-xs text-muted">
             ابحث عن أي صنف وعدّل الاسم أو السعر أو اخفيه من الموقع
           </p>

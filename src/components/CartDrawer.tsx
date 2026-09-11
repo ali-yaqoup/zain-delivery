@@ -83,7 +83,7 @@ export function CartDrawer() {
               </div>
               <p className="font-semibold text-ink mb-1">سلتك فارغة</p>
               <p className="text-sm text-muted">
-                اختار من كينج بيتزا أو ميني ماركت مطاوع
+                اختار من كينج بيتزا أو الميني ماركت
               </p>
               <Link
                 href="/stores"

@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "زين دليفري",
     short_name: "زين دليفري",
     description:
-      "خدمة توصيل محلية — اطلب من كينج بيتزا وميني ماركت مطاوع في كفل حارس والقرى المجاورة.",
+      "خدمة توصيل محلية — اطلب من كينج بيتزا والميني ماركت في كفل حارس والقرى المجاورة.",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",

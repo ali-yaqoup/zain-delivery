@@ -220,12 +220,12 @@ export const stores: Store[] = [
   {
     id: "mutawa-market",
     slug: "mutawa-market",
-    name: "ميني ماركت مطاوع",
-    nameEn: "Mini Market Mutawa",
+    name: "ميني ماركت",
+    nameEn: "Mini Market",
     category: "market",
     tagline: "كل احتياجات البيت قريبة منك",
     description:
-      "ميني ماركت مطاوع — آلاف الأصناف: بقالة، مشروبات، منظفات، ومنتجات يومية بتوصيل لكفل حارس والقرى المجاورة.",
+      "ميني ماركت — آلاف الأصناف: بقالة، مشروبات، منظفات، ومنتجات يومية بتوصيل لكفل حارس والقرى المجاورة.",
     rating: 4.7,
     deliveryMinutes: "20–35",
     deliveryFee: 5,
