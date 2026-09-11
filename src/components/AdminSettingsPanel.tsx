@@ -288,13 +288,6 @@ export function AdminSettingsPanel({
                 }
               />
             </Field>
-            <Field label="نص زر واتساب">
-              <input
-                className={inputClass}
-                value={draft.content.partnerCta || ""}
-                onChange={(e) => patchContent({ partnerCta: e.target.value })}
-              />
-            </Field>
             <Field label="رقم واتساب / اتصال">
               <input
                 className={inputClass}
@@ -302,15 +295,6 @@ export function AdminSettingsPanel({
                 value={draft.content.partnerPhone || ""}
                 onChange={(e) =>
                   patchContent({ partnerPhone: e.target.value })
-                }
-              />
-            </Field>
-            <Field label="رسالة واتساب الجاهزة">
-              <input
-                className={inputClass}
-                value={draft.content.partnerWhatsappText || ""}
-                onChange={(e) =>
-                  patchContent({ partnerWhatsappText: e.target.value })
                 }
               />
             </Field>

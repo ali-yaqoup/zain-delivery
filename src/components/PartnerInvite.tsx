@@ -2,6 +2,7 @@
 
 import { useSiteSettings } from "@/context/SiteSettingsContext";
 import { PhoneIcon } from "@/components/icons";
+import { PARTNER_WHATSAPP } from "@/lib/developer-credit";
 
 function toWhatsAppNumber(phone: string) {
   const digits = phone.replace(/\D/g, "");
@@ -20,8 +21,7 @@ export function PartnerInvite({ compact = false }: { compact?: boolean }) {
 
   const wa = toWhatsAppNumber(phone);
   const waHref = `https://wa.me/${wa}?text=${encodeURIComponent(
-    c.partnerWhatsappText ||
-      "مرحبا علي يعقوب، بدي أضيف محلي/مطعمي على موقع زين دليفري"
+    PARTNER_WHATSAPP.message
   )}`;
   const telHref = `tel:+${wa}`;
 
@@ -58,7 +58,7 @@ export function PartnerInvite({ compact = false }: { compact?: boolean }) {
                 rel="noopener noreferrer"
                 className="btn-press inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-bold text-white glow-brand hover:bg-brand-hover"
               >
-                {c.partnerCta}
+                {PARTNER_WHATSAPP.cta}
               </a>
               <a
                 href={telHref}

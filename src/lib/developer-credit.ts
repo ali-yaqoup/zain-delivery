@@ -7,3 +7,9 @@ export const DEVELOPER_CREDIT = {
   whatsappText:
     "مرحبا، شفت وسم المبرمج على موقع زين دليفري وبدي أعمل موقع",
 } as const;
+
+/** Partner join WhatsApp — locked so app buyers cannot change lead capture */
+export const PARTNER_WHATSAPP = {
+  cta: "تواصل واتساب",
+  message: "مرحبا علي يعقوب، بدي أضيف محلي/مطعمي على موقع زين دليفري",
+} as const;
