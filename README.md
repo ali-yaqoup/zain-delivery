@@ -44,8 +44,10 @@ Environment variables are documented in `.env.example`. Copy that file to `.env.
 
 ## License & copyright
 
-Copyright © 2026 Zain Delivery. All rights reserved.
+Copyright © 2026 Ali Yaqoub. All rights reserved.
 
 This software and its contents are proprietary. Unauthorized copying, distribution, modification, or commercial use is prohibited without prior written permission from the copyright holder.
 
 The live service at [zaindelivery.shop](https://zaindelivery.shop) and related branding are trademarks of their respective owners.
+
+See the [LICENSE](./LICENSE) file for the full notice.
