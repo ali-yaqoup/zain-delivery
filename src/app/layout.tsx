@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Noto_Kufi_Arabic, Tajawal } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 import { SiteSettingsProvider } from "@/context/SiteSettingsContext";
 import { CartProvider } from "@/context/CartContext";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -155,6 +156,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </SiteSettingsProvider>
         </ConditionalSerwist>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
