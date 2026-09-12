@@ -328,6 +328,10 @@ export default function AdminPage() {
               </span>
             </span>
           </label>
+          <p className="rounded-xl border border-border/80 bg-surface-2/40 px-3 py-2.5 text-xs text-muted">
+            لإضافة اختصار الأدمن على الشاشة الرئيسية: افتح هذه الصفحة من المتصفح (مو من تطبيق الزبائن)،
+            ثم «إضافة إلى الشاشة الرئيسية». بيظهر باسم <span className="text-ink">أدمن زين</span> منفصل عن موقع الزبائن.
+          </p>
           {error && <p className="text-sm text-danger">{error}</p>}
           <button
             type="submit"

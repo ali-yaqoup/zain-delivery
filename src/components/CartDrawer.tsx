@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
@@ -13,6 +14,7 @@ import {
 import { CartIcon } from "@/components/icons";
 
 export function CartDrawer() {
+  const pathname = usePathname();
   const {
     isOpen,
     closeCart,
@@ -47,7 +49,7 @@ export function CartDrawer() {
     };
   }, [isOpen, closeCart, mounted]);
 
-  if (!mounted || !isOpen) return null;
+  if (!mounted || !isOpen || pathname.startsWith("/admin")) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-start">

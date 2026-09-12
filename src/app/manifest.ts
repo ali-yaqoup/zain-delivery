@@ -1,12 +1,18 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/seo";
 
 export default function manifest(): MetadataRoute.Manifest {
+  const origin = getSiteUrl().replace(/\/$/, "");
+
   return {
+    // Distinct from the admin PWA so both can be installed separately
+    id: `${origin}/`,
     name: "زين دليفري",
     short_name: "زين دليفري",
     description:
-      "خدمة توصيل محلية — اطلب من كينج بيتزا والميني ماركت في كفل حارس والقرى المجاورة.",
+      "خدمة توصيل محلية — اطلب من المطاعم والميني ماركت والخضار والفواكه في كفل حارس والقرى المجاورة.",
     start_url: "/",
+    scope: "/",
     display: "standalone",
     orientation: "portrait",
     background_color: "#0b0b0b",
