@@ -14,7 +14,7 @@ type Props = {
 };
 
 const FALLBACK =
-  "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=400&q=60";
+  "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=60";
 
 function canOptimize(src: string) {
   if (src.startsWith("/")) return true;

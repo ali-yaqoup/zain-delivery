@@ -83,7 +83,7 @@ export function AdminSettingsPanel({
   }
 
   function patchStore(
-    id: "king-pizza" | "mutawa-market",
+    id: "king-pizza" | "mutawa-market" | "vegetables",
     partial: StoreProfilePatch
   ) {
     setDraft((prev) => ({
@@ -495,7 +495,7 @@ export function AdminSettingsPanel({
 
       {section === "stores" && (
         <section className="space-y-4">
-          {(["king-pizza", "mutawa-market"] as const).map((id) => {
+          {(["king-pizza", "mutawa-market", "vegetables"] as const).map((id) => {
             const base = baseStores.find((s) => s.id === id)!;
             const live = stores.find((s) => s.id === id) || base;
             const patch = draft.storeProfiles[id] || {};

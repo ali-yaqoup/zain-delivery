@@ -8,8 +8,9 @@ import { formatPrice } from "@/lib/stores";
 
 export function MobileCartBar() {
   const pathname = usePathname();
-  const { itemCount, total, openCart, store } = useCart();
+  const { itemCount, total, openCart, store, items } = useCart();
   const [bump, setBump] = useState(false);
+  const priceAtDelivery = items.some((line) => line.priceAtDelivery);
 
   useEffect(() => {
     if (itemCount <= 0) return;
@@ -37,7 +38,8 @@ export function MobileCartBar() {
             <span className={`inline-block ${bump ? "animate-pop" : ""}`}>
               {itemCount}
             </span>{" "}
-            عنصر • {formatPrice(total)}
+            عنصر •{" "}
+            {priceAtDelivery ? "عند التوصيل" : formatPrice(total)}
           </p>
         </div>
         <button

@@ -11,6 +11,7 @@ function resolveMenuItemPrice(
   item: MenuItem,
   sizeLabel?: string
 ): number | null {
+  if (item.priceAtDelivery) return 0;
   if (item.sizes?.length) {
     const size =
       item.sizes.find((s) => s.labelAr === sizeLabel || s.label === sizeLabel) ||
@@ -74,7 +75,36 @@ export function resolveOrderItems(options: {
       return { ok: false, error: "تعذر التحقق من سعر أحد المنتجات" };
     }
 
-    const quantity = Math.min(99, Math.max(1, Number(line.quantity) || 1));
+    const quantity =
+      menuItem.priceAtDelivery && line.orderMode === "budget"
+        ? 1
+        : Math.min(
+            99,
+            Math.max(
+              menuItem.priceAtDelivery ? 0.25 : 1,
+              Math.round((Number(line.quantity) || 1) * 100) / 100
+            )
+          );
+
+    const orderMode =
+      menuItem.priceAtDelivery && line.orderMode === "budget"
+        ? ("budget" as const)
+        : menuItem.priceAtDelivery
+          ? ("quantity" as const)
+          : undefined;
+
+    let budgetAmount: number | undefined;
+    if (orderMode === "budget") {
+      const raw = Number(line.budgetAmount);
+      if (!Number.isFinite(raw) || raw < 1) {
+        return { ok: false, error: "حدّد مبلغاً صالحاً لأحد الأصناف" };
+      }
+      budgetAmount = Math.min(500, Math.round(raw * 100) / 100);
+    }
+
+    const requestNote = line.requestNote
+      ? String(line.requestNote).trim().slice(0, 80)
+      : undefined;
 
     safe.push({
       lineId: String(line.lineId || `${itemId}-${sizeLabel || "default"}`).slice(
@@ -88,6 +118,11 @@ export function resolveOrderItems(options: {
       price,
       quantity,
       image: String(menuItem.image || line.image || "").slice(0, 500),
+      priceAtDelivery: Boolean(menuItem.priceAtDelivery),
+      unit: menuItem.unit ? String(menuItem.unit).slice(0, 20) : undefined,
+      orderMode,
+      budgetAmount,
+      requestNote,
     });
   }
 

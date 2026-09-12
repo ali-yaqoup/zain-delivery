@@ -11,10 +11,20 @@ import {
 } from "react";
 import { DEFAULT_VILLAGE, type VillageName } from "@/lib/stores";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
-import type { CartLine, MenuItem, MenuSize, Store } from "@/lib/types";
+import type {
+  CartLine,
+  FlexibleOrderMode,
+  MenuItem,
+  MenuSize,
+  Store,
+} from "@/lib/types";
 
-type AddItemOptions = {
+export type FlexibleAddOptions = {
   size?: MenuSize;
+  orderMode?: FlexibleOrderMode;
+  quantity?: number;
+  budgetAmount?: number;
+  requestNote?: string;
 };
 
 type CartContextValue = {
@@ -30,13 +40,14 @@ type CartContextValue = {
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
-  addItem: (store: Store, item: MenuItem, options?: AddItemOptions) => void;
+  addItem: (store: Store, item: MenuItem, options?: FlexibleAddOptions) => void;
   setQuantity: (lineId: string, quantity: number) => void;
+  updateLine: (lineId: string, patch: Partial<CartLine>) => void;
   clearCart: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
-const STORAGE_KEY = "zain-cart-v3";
+const STORAGE_KEY = "zain-cart-v4";
 
 type PersistedCart = {
   storeId: string | null;
@@ -44,11 +55,23 @@ type PersistedCart = {
   village?: VillageName;
 };
 
+function clampQty(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  return Math.min(99, Math.round(value * 100) / 100);
+}
+
+function clampBudget(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  return Math.min(500, Math.round(value * 100) / 100);
+}
+
 function makeLine(
   store: Store,
   item: MenuItem,
-  size?: MenuSize
+  options?: FlexibleAddOptions
 ): CartLine | null {
+  const size = options?.size;
+
   if (item.sizes?.length) {
     if (!size) return null;
     return {
@@ -62,6 +85,48 @@ function makeLine(
       image: item.image,
     };
   }
+
+  if (item.priceAtDelivery) {
+    const orderMode: FlexibleOrderMode =
+      options?.orderMode === "budget" ? "budget" : "quantity";
+    const requestNote = options?.requestNote?.trim().slice(0, 80) || undefined;
+
+    if (orderMode === "budget") {
+      const budgetAmount = clampBudget(options?.budgetAmount ?? 0);
+      if (budgetAmount <= 0) return null;
+      return {
+        lineId: item.id,
+        itemId: item.id,
+        storeId: store.id,
+        name: item.name,
+        price: 0,
+        quantity: 1,
+        image: item.image,
+        priceAtDelivery: true,
+        unit: item.unit,
+        orderMode: "budget",
+        budgetAmount,
+        requestNote,
+      };
+    }
+
+    const quantity = clampQty(options?.quantity ?? 1);
+    if (quantity <= 0) return null;
+    return {
+      lineId: item.id,
+      itemId: item.id,
+      storeId: store.id,
+      name: item.name,
+      price: 0,
+      quantity,
+      image: item.image,
+      priceAtDelivery: true,
+      unit: item.unit,
+      orderMode: "quantity",
+      requestNote,
+    };
+  }
+
   if (typeof item.price !== "number") return null;
   return {
     lineId: item.id,
@@ -86,7 +151,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw =
+        localStorage.getItem(STORAGE_KEY) ||
+        localStorage.getItem("zain-cart-v3");
       if (raw) {
         const parsed = JSON.parse(raw) as PersistedCart;
         setStoreId(parsed.storeId);
@@ -122,8 +189,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addItem = useCallback(
-    (nextStore: Store, item: MenuItem, options?: AddItemOptions) => {
-      const line = makeLine(nextStore, item, options?.size);
+    (nextStore: Store, item: MenuItem, options?: FlexibleAddOptions) => {
+      const line = makeLine(nextStore, item, options);
       if (!line) return;
 
       setStoreId((currentStoreId) => {
@@ -133,22 +200,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
           );
           if (!ok) return currentStoreId;
           setItems([{ ...line }]);
-          setIsOpen(true);
+          if (!line.priceAtDelivery) setIsOpen(true);
           return nextStore.id;
         }
 
         setItems((prev) => {
           const existing = prev.find((l) => l.lineId === line.lineId);
           if (existing) {
+            // Flexible items replace request; priced items increment qty
+            if (line.priceAtDelivery) {
+              return prev.map((l) =>
+                l.lineId === line.lineId ? { ...line } : l
+              );
+            }
             return prev.map((l) =>
               l.lineId === line.lineId
-                ? { ...l, quantity: l.quantity + 1 }
+                ? { ...l, quantity: clampQty(l.quantity + 1) || 1 }
                 : l
             );
           }
           return [...prev, line];
         });
-        setIsOpen(true);
+        if (!line.priceAtDelivery) setIsOpen(true);
         return nextStore.id;
       });
     },
@@ -157,14 +230,60 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const setQuantity = useCallback((lineId: string, quantity: number) => {
     setItems((prev) => {
-      if (quantity <= 0) {
+      const nextQty = clampQty(quantity);
+      if (nextQty <= 0) {
         const next = prev.filter((line) => line.lineId !== lineId);
         if (next.length === 0) setStoreId(null);
         return next;
       }
-      return prev.map((line) =>
-        line.lineId === lineId ? { ...line, quantity } : line
-      );
+      return prev.map((line) => {
+        if (line.lineId !== lineId) return line;
+        if (line.orderMode === "budget") {
+          return { ...line, quantity: 1 };
+        }
+        return { ...line, quantity: nextQty };
+      });
+    });
+  }, []);
+
+  const updateLine = useCallback((lineId: string, patch: Partial<CartLine>) => {
+    setItems((prev) => {
+      const next = prev
+        .map((line) => {
+          if (line.lineId !== lineId) return line;
+          const merged: CartLine = { ...line, ...patch };
+          if (merged.orderMode === "budget") {
+            const budgetAmount = clampBudget(
+              Number(merged.budgetAmount ?? line.budgetAmount ?? 0)
+            );
+            if (budgetAmount <= 0) return null;
+            return {
+              ...merged,
+              quantity: 1,
+              budgetAmount,
+              orderMode: "budget" as const,
+              requestNote: merged.requestNote?.trim().slice(0, 80) || undefined,
+            };
+          }
+          if (merged.priceAtDelivery) {
+            const quantity = clampQty(Number(merged.quantity ?? line.quantity));
+            if (quantity <= 0) return null;
+            return {
+              ...merged,
+              quantity,
+              orderMode: "quantity" as const,
+              budgetAmount: undefined,
+              requestNote: merged.requestNote?.trim().slice(0, 80) || undefined,
+            };
+          }
+          const quantity = clampQty(Number(merged.quantity ?? line.quantity));
+          if (quantity <= 0) return null;
+          return { ...merged, quantity };
+        })
+        .filter(Boolean) as CartLine[];
+
+      if (next.length === 0) setStoreId(null);
+      return next;
     });
   }, []);
 
@@ -180,7 +299,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const deliveryFee =
     store && items.length > 0 ? getDeliveryFee(village) : 0;
   const total = subtotal + deliveryFee;
-  const itemCount = items.reduce((sum, line) => sum + line.quantity, 0);
+  const itemCount = items.reduce((sum, line) => {
+    if (line.orderMode === "budget") return sum + 1;
+    return sum + line.quantity;
+  }, 0);
 
   const value: CartContextValue = {
     store,
@@ -197,6 +319,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     toggleCart: () => setIsOpen((v) => !v),
     addItem,
     setQuantity,
+    updateLine,
     clearCart,
   };
 

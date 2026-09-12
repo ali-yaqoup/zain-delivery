@@ -14,7 +14,12 @@ export function StoreCard({ store }: { store: Store }) {
   const { getDeliveryFee } = useSiteSettings();
   const deliveryFee = getDeliveryFee(village);
   const [open, setOpen] = useState(() => isStoreOpen(store));
-  const badge = store.category === "restaurant" ? "مطعم" : "ميني ماركت";
+  const badge =
+    store.id === "vegetables"
+      ? "خضراوات وفواكه"
+      : store.category === "restaurant"
+        ? "مطعم"
+        : "ميني ماركت";
 
   useEffect(() => {
     const sync = () => setOpen(isStoreOpen(store));
@@ -92,7 +97,13 @@ export function StoreCard({ store }: { store: Store }) {
           <span>
             توصيل لـ{village} {formatPrice(deliveryFee)}
           </span>
-          <span>حد أدنى {formatPrice(store.minOrder)}</span>
+          <span>
+            {store.minOrder > 0
+              ? `حد أدنى ${formatPrice(store.minOrder)}`
+              : store.menu.some((m) => m.priceAtDelivery)
+                ? "السعر عند التوصيل"
+                : "بدون حد أدنى"}
+          </span>
         </div>
         <span className="btn-press inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand/15 py-3 text-sm font-bold text-brand transition group-hover:bg-brand group-hover:text-white group-hover:glow-brand">
           تصفح القائمة واطلب

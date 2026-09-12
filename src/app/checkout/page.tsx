@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
-import { formatPrice, type VillageName } from "@/lib/stores";
+import { formatCartLinePrice, formatCartLineRequest, formatPrice, type VillageName } from "@/lib/stores";
 import { CartIcon } from "@/components/icons";
 
 const steps = ["السلة", "البيانات", "التأكيد"];
@@ -16,6 +16,7 @@ export default function CheckoutPage() {
   const { deliveryZones, getDeliveryFee } = useSiteSettings();
   const deliveryFee = getDeliveryFee(village);
   const total = subtotal + deliveryFee;
+  const priceAtDelivery = items.some((line) => line.priceAtDelivery);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
@@ -46,7 +47,7 @@ export default function CheckoutPage() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
-    if (subtotal < store!.minOrder) {
+    if (store!.minOrder > 0 && subtotal < store!.minOrder) {
       setError(
         `الحد الأدنى للطلب من ${store!.name} هو ${formatPrice(store!.minOrder)}`
       );
@@ -217,6 +218,8 @@ export default function CheckoutPage() {
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                 جارٍ إرسال الطلب...
               </span>
+            ) : priceAtDelivery ? (
+              `تأكيد الطلب • توصيل ${formatPrice(deliveryFee)}`
             ) : (
               `تأكيد الطلب • ${formatPrice(total)}`
             )}
@@ -244,11 +247,16 @@ export default function CheckoutPage() {
                   className="flex justify-between gap-3 text-sm"
                 >
                   <span className="text-muted">
-                    {line.quantity}× {line.name}
-                    {line.sizeLabel ? ` (${line.sizeLabel})` : ""}
+                    {line.priceAtDelivery
+                      ? `${line.name} — ${formatCartLineRequest(line)}`
+                      : `${line.quantity}× ${line.name}${
+                          line.sizeLabel ? ` (${line.sizeLabel})` : ""
+                        }`}
                   </span>
                   <span className="font-mono text-ink shrink-0">
-                    {formatPrice(line.price * line.quantity)}
+                    {line.priceAtDelivery
+                      ? "عند التوصيل"
+                      : formatPrice(line.price * line.quantity)}
                   </span>
                 </li>
               ))}
@@ -256,7 +264,9 @@ export default function CheckoutPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-muted">
                 <span>المجموع</span>
-                <span className="font-mono text-ink">{formatPrice(subtotal)}</span>
+                <span className="font-mono text-ink">
+                  {priceAtDelivery ? "عند التوصيل" : formatPrice(subtotal)}
+                </span>
               </div>
               <div className="flex justify-between text-muted">
                 <span>التوصيل ({village})</span>
@@ -266,10 +276,17 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between text-base font-bold pt-1">
                 <span>الإجمالي</span>
-                <span className="font-mono text-brand text-lg">
-                  {formatPrice(total)}
+                <span className="font-mono text-brand text-lg text-left">
+                  {priceAtDelivery
+                    ? `توصيل ${formatPrice(deliveryFee)} + الأصناف عند التوصيل`
+                    : formatPrice(total)}
                 </span>
               </div>
+              {priceAtDelivery && (
+                <p className="rounded-lg bg-amber/10 px-3 py-2 text-xs text-amber">
+                  السعر النهائي للأصناف يُحسب عند التوصيل حسب سعر السوق.
+                </p>
+              )}
             </div>
           </div>
         </aside>

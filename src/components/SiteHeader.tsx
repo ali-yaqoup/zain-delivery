@@ -16,11 +16,15 @@ const links = [
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { itemCount, total, openCart, village, setVillage } = useCart();
+  const { itemCount, total, openCart, village, setVillage, items } = useCart();
   const { deliveryZones, settings } = useSiteSettings();
   const c = settings.content;
   const [bump, setBump] = useState(false);
   const isAdmin = pathname.startsWith("/admin");
+  const priceAtDelivery = items.some((line) => line.priceAtDelivery);
+  const cartLabel = priceAtDelivery
+    ? `${itemCount} • عند التوصيل`
+    : `${itemCount} • ${formatPrice(total)}`;
 
   useEffect(() => {
     if (itemCount <= 0) return;
@@ -105,9 +109,7 @@ export function SiteHeader() {
               {itemCount > 0 ? (
                 <>
                   <span className="sm:hidden">{itemCount}</span>
-                  <span className="hidden sm:inline">
-                    {itemCount} • {formatPrice(total)}
-                  </span>
+                  <span className="hidden sm:inline">{cartLabel}</span>
                 </>
               ) : (
                 "السلة"

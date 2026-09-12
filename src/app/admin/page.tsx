@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { formatPrice } from "@/lib/stores";
+import { formatCartLineRequest, formatPrice } from "@/lib/stores";
 import type { Order, OrderStatus } from "@/lib/types";
 import {
   AdminSettingsPanel,
@@ -577,18 +577,25 @@ export default function AdminPage() {
                               className="flex justify-between gap-2 text-muted"
                             >
                               <span>
-                                {line.quantity}× {line.name}
-                                {line.sizeLabel ? ` (${line.sizeLabel})` : ""}
+                                {line.priceAtDelivery
+                                  ? `${line.name} — ${formatCartLineRequest(line)}`
+                                  : `${line.quantity}× ${line.name}${
+                                      line.sizeLabel ? ` (${line.sizeLabel})` : ""
+                                    }`}
                               </span>
                               <span className="font-mono text-ink">
-                                {formatPrice(line.price * line.quantity)}
+                                {line.priceAtDelivery
+                                  ? "عند التوصيل"
+                                  : formatPrice(line.price * line.quantity)}
                               </span>
                             </div>
                           ))}
                           <div className="border-t border-border pt-2 mt-2 flex justify-between font-bold">
                             <span>كاش عند الاستلام</span>
                             <span className="font-mono text-brand">
-                              {formatPrice(order.total)}
+                              {order.items.some((l) => l.priceAtDelivery)
+                                ? `توصيل ${formatPrice(order.deliveryFee)} + أصناف عند التوصيل`
+                                : formatPrice(order.total)}
                             </span>
                           </div>
                         </div>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { formatPrice } from "@/lib/stores";
+import { formatCartLineRequest, formatPrice } from "@/lib/stores";
 import type { Order, OrderStatus } from "@/lib/types";
 
 const STATUS_STEPS: { key: OrderStatus; label: string }[] = [
@@ -230,19 +230,28 @@ export default function TrackOrderClient() {
               className="flex justify-between text-sm text-muted"
             >
               <span>
-                {line.quantity}× {line.name}
-                {line.sizeLabel ? ` (${line.sizeLabel})` : ""}
+                {line.priceAtDelivery
+                  ? `${line.name} — ${formatCartLineRequest(line)}`
+                  : `${line.quantity}× ${line.name}${
+                      line.sizeLabel ? ` (${line.sizeLabel})` : ""
+                    }`}
               </span>
               <span className="font-mono text-ink">
-                {formatPrice(line.price * line.quantity)}
+                {line.priceAtDelivery
+                  ? "عند التوصيل"
+                  : formatPrice(line.price * line.quantity)}
               </span>
             </li>
           ))}
         </ul>
 
-        <div className="flex justify-between font-bold">
+        <div className="flex justify-between font-bold gap-3">
           <span>الإجمالي (كاش عند الاستلام)</span>
-          <span className="font-mono text-brand">{formatPrice(order.total)}</span>
+          <span className="font-mono text-brand text-left">
+            {order.items.some((l) => l.priceAtDelivery)
+              ? `توصيل ${formatPrice(order.deliveryFee)} + الأصناف عند التوصيل`
+              : formatPrice(order.total)}
+          </span>
         </div>
       </div>
     </div>

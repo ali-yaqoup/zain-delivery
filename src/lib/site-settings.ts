@@ -79,6 +79,7 @@ export type SiteSettings = {
   storeProfiles: {
     "king-pizza"?: StoreProfilePatch;
     "mutawa-market"?: StoreProfilePatch;
+    vegetables?: StoreProfilePatch;
   };
 };
 
@@ -247,7 +248,7 @@ export function normalizeSettings(
   const storeProfiles: SiteSettings["storeProfiles"] = {};
   const legacyMeta = raw.storeMeta as SiteSettings["storeProfiles"] | undefined;
   const rawProfiles = raw.storeProfiles as SiteSettings["storeProfiles"] | undefined;
-  for (const id of ["king-pizza", "mutawa-market"] as const) {
+  for (const id of ["king-pizza", "mutawa-market", "vegetables"] as const) {
     storeProfiles[id] = {
       ...(legacyMeta?.[id] || {}),
       ...(rawProfiles?.[id] || {}),

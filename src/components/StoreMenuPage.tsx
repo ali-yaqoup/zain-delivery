@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { ProductImage } from "@/components/ProductImage";
+import { FlexibleItemOrder } from "@/components/FlexibleItemOrder";
 import {
   formatPrice,
   itemPriceRange,
@@ -23,6 +24,7 @@ export function StoreMenuPage() {
   const { addItem, items, setQuantity, openCart, itemCount, total, village } =
     useCart();
   const deliveryFeeForVillage = getDeliveryFee(village);
+  const priceAtDeliveryCart = items.some((line) => line.priceAtDelivery);
   const [openNow, setOpenNow] = useState(() =>
     store ? isStoreOpen(store) : false
   );
@@ -183,7 +185,11 @@ export function StoreMenuPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-canvas via-canvas/55 to-canvas/25" />
         <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
           <p className="mb-2 rounded-full border border-white/20 bg-black/35 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm">
-            {store.category === "restaurant" ? "مطعم" : "ميني ماركت"}
+            {store.id === "vegetables"
+              ? "خضراوات وفواكه"
+              : store.category === "restaurant"
+                ? "مطعم"
+                : "ميني ماركت"}
           </p>
           <p className="font-display text-3xl font-extrabold text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.65)] sm:text-4xl md:text-5xl">
             {store.name}
@@ -199,7 +205,11 @@ export function StoreMenuPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs text-brand mb-1">
-                {store.category === "restaurant" ? "مطعم" : "ميني ماركت"}
+                {store.id === "vegetables"
+                  ? "خضراوات وفواكه"
+                  : store.category === "restaurant"
+                    ? "مطعم"
+                    : "ميني ماركت"}
               </p>
               <h1 className="font-display text-2xl font-bold text-ink sm:text-3xl inline-flex flex-wrap items-center gap-2">
                 <StoreGlyph
@@ -231,7 +241,11 @@ export function StoreMenuPage() {
                 <span>
                   توصيل لـ{village} {formatPrice(deliveryFeeForVillage)}
                 </span>
-                <span>حد أدنى {formatPrice(store.minOrder)}</span>
+                {store.minOrder > 0 ? (
+                  <span>حد أدنى {formatPrice(store.minOrder)}</span>
+                ) : store.menu.some((m) => m.priceAtDelivery) ? (
+                  <span>السعر عند التوصيل</span>
+                ) : null}
                 <span>{store.openHours}</span>
               </div>
               {store.phones && (
@@ -253,7 +267,8 @@ export function StoreMenuPage() {
               onClick={openCart}
               className="btn-press rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white"
             >
-              السلة ({itemCount}) • {formatPrice(total)}
+              السلة ({itemCount}) •{" "}
+              {priceAtDeliveryCart ? "عند التوصيل" : formatPrice(total)}
             </button>
           </div>
 
@@ -326,19 +341,29 @@ export function StoreMenuPage() {
               return (
                 <article
                   key={item.id}
-                  className="card-hover flex gap-3 overflow-hidden rounded-2xl border border-border bg-surface p-3"
+                  className={`card-hover overflow-hidden rounded-2xl border border-border bg-surface p-3 ${
+                    item.priceAtDelivery
+                      ? "flex flex-col gap-3 sm:flex-row"
+                      : "flex gap-3"
+                  }`}
                 >
-                  <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-surface-2 sm:h-28 sm:w-28">
+                  <div
+                    className={`relative shrink-0 overflow-hidden rounded-xl bg-surface-2 ${
+                      item.priceAtDelivery
+                        ? "h-36 w-full sm:h-28 sm:w-28"
+                        : "h-24 w-24 sm:h-28 sm:w-28"
+                    }`}
+                  >
                     <ProductImage
                       src={item.image}
                       alt={item.name}
-                      width={112}
-                      height={112}
+                      width={item.priceAtDelivery ? 400 : 112}
+                      height={item.priceAtDelivery ? 220 : 112}
                       className="h-full w-full object-cover"
-                      sizes="112px"
+                      sizes={item.priceAtDelivery ? "(max-width:640px) 100vw, 112px" : "112px"}
                     />
                   </div>
-                  <div className="flex flex-1 flex-col">
+                  <div className="flex flex-1 flex-col min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h3 className="font-semibold text-ink leading-snug">
@@ -350,11 +375,13 @@ export function StoreMenuPage() {
                           </span>
                         )}
                       </div>
-                      <span className="font-mono text-sm font-bold text-brand whitespace-nowrap">
-                        {item.sizes?.length && size
-                          ? formatPrice(size.price)
-                          : itemPriceRange(item)}
-                      </span>
+                      {!item.priceAtDelivery && (
+                        <span className="font-mono text-sm font-bold text-brand whitespace-nowrap">
+                          {item.sizes?.length && size
+                            ? formatPrice(size.price)
+                            : itemPriceRange(item)}
+                        </span>
+                      )}
                     </div>
                     {item.description ? (
                       <p className="mt-1 line-clamp-2 text-xs text-muted">
@@ -389,8 +416,18 @@ export function StoreMenuPage() {
                       </div>
                     ) : null}
 
-                    <div className="mt-auto pt-3">
-                      {qty === 0 ? (
+                    <div className={item.priceAtDelivery ? "" : "mt-auto pt-3"}>
+                      {item.priceAtDelivery ? (
+                        <FlexibleItemOrder
+                          store={store}
+                          item={item}
+                          existing={items.find((l) => l.lineId === item.id)}
+                          onAdd={(payload) =>
+                            addItem(store, item, payload)
+                          }
+                          onRemove={() => setQuantity(item.id, 0)}
+                        />
+                      ) : qty === 0 ? (
                         <button
                           type="button"
                           onClick={() => handleAdd(item)}
@@ -407,7 +444,7 @@ export function StoreMenuPage() {
                           >
                             −
                           </button>
-                          <span className="w-5 text-center font-mono text-sm">
+                          <span className="min-w-5 text-center font-mono text-sm">
                             {qty}
                           </span>
                           <button

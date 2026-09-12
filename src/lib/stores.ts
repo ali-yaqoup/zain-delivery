@@ -240,7 +240,77 @@ export const stores: Store[] = [
     menu: [] as MenuItem[],
     catalogId: "mutawa",
   },
+  {
+    id: "vegetables",
+    slug: "vegetables",
+    name: "خضراوات وفواكه",
+    nameEn: "Produce",
+    category: "market",
+    tagline: "خضار وفاكهة — كمية أو بمبلغ عند التوصيل",
+    description:
+      "خضراوات وفواكه طازجة بالتوصيل. اختَر الصنف وكمية تقريبية أو بمبلغ معيّن، والسعر النهائي حسب السوق يوم التوصيل.",
+    rating: 4.6,
+    deliveryMinutes: "25–45",
+    deliveryFee: 5,
+    minOrder: 0,
+    openHours: "يومياً من ٨ الصبح حتى ٨ المسا",
+    opensAt: "08:00",
+    closesAt: "20:00",
+    coverImage:
+      "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
+    tags: ["خضار", "فواكه", "طازج", "بالكمية"],
+    menu: [
+      // خضراوات
+      produce("tomato", "بندورة", "طازجة حسب الموسم", "كيلو", "خضراوات", "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80"),
+      produce("cucumber", "خيار", "خيار طازج", "كيلو", "خضراوات", "https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?auto=format&fit=crop&w=400&q=80"),
+      produce("potato", "بطاطا", "بطاطا للطبخ والقلي", "كيلو", "خضراوات", "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=400&q=80"),
+      produce("onion", "بصل", "بصل أحمر أو أبيض حسب المتوفر", "كيلو", "خضراوات", "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=400&q=80"),
+      produce("garlic", "ثوم", "ثوم بلدي", "رأس", "خضراوات", "https://images.unsplash.com/photo-1628998092164-4365d9ed0d29?auto=format&fit=crop&w=400&q=80"),
+      produce("pepper", "فلفل", "فلفل حلو أو حار", "كيلو", "خضراوات", "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?auto=format&fit=crop&w=400&q=80"),
+      produce("zucchini", "كوسا", "كوسا طازجة", "كيلو", "خضراوات", "https://images.unsplash.com/photo-1768405741410-71317eceb565?auto=format&fit=crop&w=400&q=80"),
+      produce("eggplant", "باذنجان", "باذنجان للطبخ", "كيلو", "خضراوات", "https://images.unsplash.com/photo-1533213520888-6aa83d71cc24?auto=format&fit=crop&w=400&q=80"),
+      produce("lettuce", "خس", "خس طازج", "ربطة", "خضراوات", "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?auto=format&fit=crop&w=400&q=80"),
+      produce("carrot", "جزر", "جزر طازج", "كيلو", "خضراوات", "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=400&q=80"),
+      produce("cabbage", "ملفوف", "ملفوف", "رأس", "خضراوات", "https://images.unsplash.com/photo-1581592705138-6f4c1a493cec?auto=format&fit=crop&w=400&q=80"),
+      produce("cauliflower", "زهرة", "قرنبيط / زهرة", "رأس", "خضراوات", "https://images.unsplash.com/photo-1566842600175-97dca489844f?auto=format&fit=crop&w=400&q=80"),
+      produce("parsley", "بقدونس", "بقدونس أخضر", "ربطة", "خضراوات", "https://images.unsplash.com/photo-1535189487909-a262ad10c165?auto=format&fit=crop&w=400&q=80"),
+      produce("mint", "نعناع", "نعناع طازج", "ربطة", "خضراوات", "https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?auto=format&fit=crop&w=400&q=80"),
+      produce("spinach", "سبانخ", "سبانخ طازجة", "ربطة", "خضراوات", "https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=400&q=80"),
+      // فواكه
+      produce("apple", "تفاح", "تفاح حسب المتوفر", "كيلو", "فواكه", "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=400&q=80"),
+      produce("banana", "موز", "موز طازج", "كيلو", "فواكه", "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=400&q=80"),
+      produce("orange", "برتقال", "برتقال عصير أو أكل", "كيلو", "فواكه", "https://images.unsplash.com/photo-1547514701-42782101795e?auto=format&fit=crop&w=400&q=80"),
+      produce("clementine", "يوسف أفندي", "يوسف أفندي / كلمنتين", "كيلو", "فواكه", "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?auto=format&fit=crop&w=400&q=80"),
+      produce("lemon", "ليمون", "ليمون حامض", "كيلو", "فواكه", "https://images.unsplash.com/photo-1590502593747-42a996133562?auto=format&fit=crop&w=400&q=80"),
+      produce("grape", "عنب", "عنب حسب الموسم", "كيلو", "فواكه", "https://images.unsplash.com/photo-1537640538966-79f369143f8f?auto=format&fit=crop&w=400&q=80"),
+      produce("watermelon", "بطيخ", "بطيخ طازج", "قطعة", "فواكه", "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=400&q=80"),
+      produce("strawberry", "فراولة", "فراولة حسب الموسم", "علبة", "فواكه", "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?auto=format&fit=crop&w=400&q=80"),
+      produce("mango", "مانجا", "مانجا حسب الموسم", "كيلو", "فواكه", "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?auto=format&fit=crop&w=400&q=80"),
+      produce("pear", "إجاص", "إجاص طازج", "كيلو", "فواكه", "https://images.unsplash.com/photo-1514756331096-242fdeb70d4a?auto=format&fit=crop&w=400&q=80"),
+      produce("avocado", "أفوكادو", "أفوكادو حسب المتوفر", "حبة", "فواكه", "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?auto=format&fit=crop&w=400&q=80"),
+      produce("pineapple", "أناناس", "أناناس طازج", "حبة", "فواكه", "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?auto=format&fit=crop&w=400&q=80"),
+    ],
+  },
 ];
+
+function produce(
+  id: string,
+  name: string,
+  description: string,
+  unit: string,
+  category: string,
+  image: string
+): MenuItem {
+  return {
+    id: `veg-${id}`,
+    name,
+    description,
+    category,
+    image,
+    unit,
+    priceAtDelivery: true,
+  };
+}
 
 export function getStoreBySlug(slug: string) {
   return stores.find((s) => s.slug === slug);
@@ -254,10 +324,25 @@ export function formatPrice(amount: number) {
   return `${amount.toFixed(amount % 1 === 0 ? 0 : 2)} ₪`;
 }
 
-export function itemPriceRange(item: {
+export function isPriceAtDelivery(item: {
+  priceAtDelivery?: boolean;
   price?: number;
   sizes?: { price: number }[];
 }) {
+  if (item.priceAtDelivery) return true;
+  if (item.sizes?.length) return false;
+  return typeof item.price !== "number";
+}
+
+export function itemPriceRange(item: {
+  price?: number;
+  sizes?: { price: number }[];
+  priceAtDelivery?: boolean;
+  unit?: string;
+}) {
+  if (isPriceAtDelivery(item)) {
+    return "كمية أو بمبلغ · عند التوصيل";
+  }
   if (item.sizes?.length) {
     const prices = item.sizes.map((s) => s.price);
     const min = Math.min(...prices);
@@ -266,4 +351,46 @@ export function itemPriceRange(item: {
   }
   if (typeof item.price === "number") return formatPrice(item.price);
   return "—";
+}
+
+export function formatQty(amount: number) {
+  if (!Number.isFinite(amount)) return "0";
+  const rounded = Math.round(amount * 100) / 100;
+  return Number.isInteger(rounded) ? String(rounded) : String(rounded);
+}
+
+export function formatCartLineRequest(line: {
+  quantity: number;
+  priceAtDelivery?: boolean;
+  unit?: string;
+  orderMode?: "quantity" | "budget";
+  budgetAmount?: number;
+  requestNote?: string;
+}) {
+  if (!line.priceAtDelivery) {
+    return `${formatQty(line.quantity)}×`;
+  }
+  if (line.orderMode === "budget" && line.budgetAmount) {
+    const base = `بمبلغ ≈ ${formatPrice(line.budgetAmount)}`;
+    return line.requestNote ? `${base} · ${line.requestNote}` : base;
+  }
+  const qty = formatQty(line.quantity);
+  const unit = line.unit ? ` ${line.unit}` : "";
+  const base = `${qty}${unit} تقريباً`;
+  return line.requestNote ? `${base} · ${line.requestNote}` : base;
+}
+
+export function formatCartLinePrice(line: {
+  price: number;
+  quantity: number;
+  priceAtDelivery?: boolean;
+  unit?: string;
+  orderMode?: "quantity" | "budget";
+  budgetAmount?: number;
+  requestNote?: string;
+}) {
+  if (line.priceAtDelivery) {
+    return `${formatCartLineRequest(line)} · عند التوصيل`;
+  }
+  return formatPrice(line.price * line.quantity);
 }

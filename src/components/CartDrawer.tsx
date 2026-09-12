@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useSiteSettings } from "@/context/SiteSettingsContext";
-import { formatPrice, type VillageName } from "@/lib/stores";
+import {
+  formatCartLinePrice,
+  formatCartLineRequest,
+  formatPrice,
+  type VillageName,
+} from "@/lib/stores";
 import { CartIcon } from "@/components/icons";
 
 export function CartDrawer() {
@@ -23,6 +28,7 @@ export function CartDrawer() {
   } = useCart();
   const { deliveryZones } = useSiteSettings();
   const [mounted, setMounted] = useState(false);
+  const priceAtDelivery = items.some((line) => line.priceAtDelivery);
 
   useEffect(() => {
     setMounted(true);
@@ -114,9 +120,23 @@ export function CartDrawer() {
                     {line.sizeLabel && (
                       <p className="text-xs text-muted">{line.sizeLabel}</p>
                     )}
+                    {line.priceAtDelivery ? (
+                      <p className="text-xs text-muted mt-0.5">
+                        {formatCartLineRequest(line)}
+                      </p>
+                    ) : line.unit && !line.sizeLabel ? (
+                      <p className="text-xs text-muted">بال{line.unit}</p>
+                    ) : null}
                     <p className="font-mono text-xs text-brand mt-0.5">
-                      {formatPrice(line.price)}
+                      {line.priceAtDelivery
+                        ? "عند التوصيل"
+                        : formatPrice(line.price)}
                     </p>
+                    {line.priceAtDelivery ? (
+                      <p className="mt-2 text-[11px] text-soft">
+                        عدّل الطلب من صفحة المحل أو احذف من هنا
+                      </p>
+                    ) : (
                     <div className="mt-2 inline-flex items-center gap-1 rounded-xl border border-border bg-surface p-1">
                       <button
                         type="button"
@@ -142,10 +162,11 @@ export function CartDrawer() {
                         +
                       </button>
                     </div>
+                    )}
                   </div>
                   <div className="flex flex-col items-end justify-between">
                     <p className="font-mono text-sm font-bold text-ink">
-                      {formatPrice(line.price * line.quantity)}
+                      {formatCartLinePrice(line)}
                     </p>
                     <button
                       type="button"
@@ -165,7 +186,9 @@ export function CartDrawer() {
           <div className="space-y-3 border-t border-border bg-surface-2/95 px-5 py-4 backdrop-blur">
             <div className="flex justify-between text-sm text-muted">
               <span>المجموع الفرعي</span>
-              <span className="font-mono text-ink">{formatPrice(subtotal)}</span>
+              <span className="font-mono text-ink">
+                {priceAtDelivery ? "عند التوصيل" : formatPrice(subtotal)}
+              </span>
             </div>
             <div className="flex justify-between text-sm text-muted">
               <span>رسوم التوصيل ({village})</span>
@@ -188,9 +211,16 @@ export function CartDrawer() {
             <div className="flex justify-between text-base font-bold">
               <span>الإجمالي</span>
               <span className="font-mono text-brand text-lg">
-                {formatPrice(total)}
+                {priceAtDelivery
+                  ? `توصيل ${formatPrice(deliveryFee)} + الأصناف عند التوصيل`
+                  : formatPrice(total)}
               </span>
             </div>
+            {priceAtDelivery && (
+              <p className="rounded-lg bg-amber/10 px-3 py-2 text-xs text-amber">
+                أسعار الخضار حسب السوق يوم التوصيل — تدفع الكاش عند الاستلام.
+              </p>
+            )}
             <p className="rounded-lg bg-success/10 px-3 py-2 text-xs text-success">
               💵 الدفع عند الاستلام • كاش
             </p>

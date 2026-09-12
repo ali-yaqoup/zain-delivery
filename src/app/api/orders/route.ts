@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
       0
     );
 
-    if (computedSubtotal < store.minOrder) {
+    if (store.minOrder > 0 && computedSubtotal < store.minOrder) {
       return NextResponse.json(
         { error: `الحد الأدنى للطلب ${store.minOrder} ₪` },
         { status: 400 }

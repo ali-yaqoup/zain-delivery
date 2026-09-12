@@ -17,6 +17,10 @@ export type MenuItem = {
   category: string;
   image: string;
   popular?: boolean;
+  /** Price decided at delivery (quantity-only ordering) */
+  priceAtDelivery?: boolean;
+  /** Unit label shown with quantity, e.g. كيلو / ربطة */
+  unit?: string;
 };
 
 export type Store = {
@@ -44,6 +48,9 @@ export type Store = {
   catalogId?: "mutawa";
 };
 
+/** How the customer asks for a price-at-delivery item */
+export type FlexibleOrderMode = "quantity" | "budget";
+
 export type CartLine = {
   /** Unique key in cart (itemId + optional size) */
   lineId: string;
@@ -54,6 +61,14 @@ export type CartLine = {
   price: number;
   quantity: number;
   image: string;
+  priceAtDelivery?: boolean;
+  unit?: string;
+  /** quantity = approximate amount; budget = spend up to X ₪ */
+  orderMode?: FlexibleOrderMode;
+  /** Target spend in ₪ when orderMode is budget */
+  budgetAmount?: number;
+  /** Extra note e.g. "كبار" / "نص كيلو تقريباً" */
+  requestNote?: string;
 };
 
 export type OrderStatus =
