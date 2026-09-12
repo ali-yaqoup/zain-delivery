@@ -8,7 +8,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { CartDrawer } from "@/components/CartDrawer";
 import { MobileCartBar } from "@/components/MobileCartBar";
 import { AddToast } from "@/components/AddToast";
-import { SerwistProvider } from "@/components/SerwistProvider";
+import { ConditionalSerwist } from "@/components/ConditionalSerwist";
 import { JsonLd } from "@/components/JsonLd";
 import {
   SITE_DESCRIPTION,
@@ -140,7 +140,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col antialiased atmosphere">
         <JsonLd data={localBusinessJsonLd()} />
         <JsonLd data={websiteJsonLd()} />
-        <SerwistProvider swUrl="/serwist/sw.js">
+        <ConditionalSerwist>
           <SiteSettingsProvider>
             <CartProvider>
               <SiteHeader />
@@ -153,7 +153,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <AddToast />
             </CartProvider>
           </SiteSettingsProvider>
-        </SerwistProvider>
+        </ConditionalSerwist>
         <SpeedInsights />
       </body>
     </html>

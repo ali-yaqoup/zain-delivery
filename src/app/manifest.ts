@@ -1,12 +1,9 @@
 import type { MetadataRoute } from "next";
-import { getSiteUrl } from "@/lib/seo";
 
 export default function manifest(): MetadataRoute.Manifest {
-  const origin = getSiteUrl().replace(/\/$/, "");
-
   return {
-    // Distinct from the admin PWA so both can be installed separately
-    id: `${origin}/`,
+    // Path id (not full URL) so www / apex / preview stay the same app
+    id: "/zain-shop",
     name: "زين دليفري",
     short_name: "زين دليفري",
     description:
