@@ -28,20 +28,45 @@ export function getAdminPassword(): string | null {
   return value ? value : null;
 }
 
-export function isAdminAuthorized(request: NextRequest): boolean {
-  const expectedEmail = getAdminEmail();
-  const expectedPassword = getAdminPassword();
-  if (!expectedEmail || !expectedPassword) return false;
+type AdminAccount = { email: string; password: string };
 
+/** Primary ADMIN_EMAIL/PASSWORD plus optional extras in ADMIN_USERS. */
+export function getAdminAccounts(): AdminAccount[] {
+  const accounts: AdminAccount[] = [];
+  const primaryEmail = getAdminEmail();
+  const primaryPassword = getAdminPassword();
+  if (primaryEmail && primaryPassword) {
+    accounts.push({ email: primaryEmail, password: primaryPassword });
+  }
+
+  const extra = process.env.ADMIN_USERS?.trim();
+  if (extra) {
+    for (const part of extra.split("|")) {
+      const idx = part.indexOf(":");
+      if (idx <= 0) continue;
+      const email = normalizeEmail(part.slice(0, idx));
+      const password = part.slice(idx + 1);
+      if (email && password) accounts.push({ email, password });
+    }
+  }
+
+  return accounts;
+}
+
+export function isAdminAuthorized(request: NextRequest): boolean {
   const providedEmail = normalizeEmail(
     request.headers.get("x-admin-email") || ""
   );
   const providedPassword = request.headers.get("x-admin-key")?.trim() || "";
   if (!providedEmail || !providedPassword) return false;
 
-  return (
-    safeEqualString(providedEmail, expectedEmail) &&
-    safeEqualString(providedPassword, expectedPassword)
+  const accounts = getAdminAccounts();
+  if (accounts.length === 0) return false;
+
+  return accounts.some(
+    (account) =>
+      safeEqualString(providedEmail, account.email) &&
+      safeEqualString(providedPassword, account.password)
   );
 }
 
