@@ -50,6 +50,15 @@ export function getAdminAccounts(): AdminAccount[] {
     }
   }
 
+  // Extra numbered accounts: ADMIN_EMAIL1 / ADMIN_PASSWORD1, ADMIN_EMAIL2...
+  for (let i = 1; i <= 9; i++) {
+    const email = process.env[`ADMIN_EMAIL${i}`]?.trim();
+    const password = process.env[`ADMIN_PASSWORD${i}`]?.trim();
+    if (email && password) {
+      accounts.push({ email: normalizeEmail(email), password });
+    }
+  }
+
   return accounts;
 }
 
