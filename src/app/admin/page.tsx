@@ -11,6 +11,7 @@ import {
 } from "@/components/AdminSettingsPanel";
 import { BrandMark } from "@/components/icons";
 import { AdminInstallGuide } from "@/components/AdminInstallGuide";
+import { AdminPushPrompt } from "@/components/AdminPushPrompt";
 import { adminAuthHeaders } from "@/lib/admin-client";
 
 const ADMIN_EMAIL_STORAGE = "zain-admin-email";
@@ -466,6 +467,9 @@ export default function AdminPage() {
         </header>
 
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+          <div className="mb-4">
+            <AdminPushPrompt email={email} password={password} />
+          </div>
           {tab === "settings" ? (
             <AdminSettingsPanel
               adminEmail={email}

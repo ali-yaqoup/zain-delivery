@@ -44,5 +44,6 @@ next-env.d.ts
 # local order data
 /data/orders.json
 /data/settings.json
+/data/push-subscriptions.json
 /data/*.tmp
 /_design_preview

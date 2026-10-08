@@ -40,3 +40,10 @@ CREATE TABLE IF NOT EXISTS site_settings (
 INSERT INTO site_settings (id, data)
 VALUES ('default', '{}'::jsonb)
 ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  endpoint TEXT PRIMARY KEY,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

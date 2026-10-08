@@ -9,6 +9,13 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/serwist/sw.js",
+        headers: [
+          { key: "Service-Worker-Allowed", value: "/" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        ],
+      },
+      {
         source: "/sitemap.xml",
         headers: [
           { key: "Content-Type", value: "text/xml; charset=utf-8" },

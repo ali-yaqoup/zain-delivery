@@ -16,6 +16,7 @@ import {
 import { rateLimit } from "@/lib/rate-limit";
 import { resolveOrderItems } from "@/lib/resolve-order-items";
 import { isStoreOpen } from "@/lib/store-hours";
+import { notifyAdminsNewOrder } from "@/lib/push-notify";
 
 export const runtime = "nodejs";
 
@@ -157,6 +158,8 @@ export async function POST(request: NextRequest) {
     });
 
     const trackToken = createTrackToken(order.id, order.phone);
+
+    void notifyAdminsNewOrder(order).catch(() => undefined);
 
     return NextResponse.json(
       { order, trackToken },
